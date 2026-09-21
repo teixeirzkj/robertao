@@ -76,10 +76,10 @@ export function Card({
 }) {
   return (
     <section
-      className={cn("rounded-2xl border border-white/10 bg-ink-800/50 p-5 sm:p-6", className)}
+      className={cn("rounded-2xl border border-white/10 bg-ink-800/50 p-4 sm:p-6", className)}
     >
       {(title || action) && (
-        <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <header className="mb-4 flex flex-wrap items-start justify-between gap-3 sm:mb-5">
           <div>
             {title && <h2 className="font-display text-base font-700 text-white">{title}</h2>}
             {description && <p className="mt-1 text-xs text-white/45">{description}</p>}
@@ -111,23 +111,25 @@ export function StatCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "rounded-2xl border p-5",
+        "rounded-2xl border p-4 sm:p-5",
         accent ? "border-gold/30 bg-gold/5" : "border-white/10 bg-ink-800/50"
       )}
     >
       <div className="flex items-center justify-between">
-        <span className="text-[11px] uppercase tracking-[0.15em] text-white/40">{label}</span>
+        <span className="text-[10px] uppercase tracking-[0.12em] text-white/40 sm:text-[11px]">
+          {label}
+        </span>
         <Icon className={cn("size-4", accent ? "text-gold" : "text-white/35")} />
       </div>
       <p
         className={cn(
-          "mt-3 font-display text-2xl font-800",
+          "mt-2 font-display text-xl font-800 sm:mt-3 sm:text-2xl",
           accent ? "text-gradient-gold" : "text-white"
         )}
       >
         {value}
       </p>
-      {hint && <p className="mt-1 text-xs text-white/35">{hint}</p>}
+      {hint && <p className="mt-1 text-[11px] leading-snug text-white/35 sm:text-xs">{hint}</p>}
     </motion.div>
   );
 }
@@ -205,6 +207,40 @@ export function Select({ label, options, className, ...props }: SelectProps) {
         ))}
       </select>
     </label>
+  );
+}
+
+/**
+ * Campo de leitura usado nas fichas de titular/ganhador.
+ * `multiline` deixa o valor quebrar em varias linhas em vez de truncar — util
+ * para e-mail, que nao cabe em meia largura no celular.
+ */
+export function Detail({
+  icon: Icon,
+  label,
+  value,
+  multiline,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  multiline?: boolean;
+}) {
+  return (
+    <div className="min-w-0 rounded-xl border border-white/10 bg-ink-900/50 px-3 py-2.5 sm:px-4 sm:py-3">
+      <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-white/35">
+        <Icon className="size-3" />
+        {label}
+      </span>
+      <p
+        className={cn(
+          "mt-1 text-[13px] text-white/85 sm:text-sm",
+          multiline ? "break-all leading-snug" : "truncate"
+        )}
+      >
+        {value}
+      </p>
+    </div>
   );
 }
 

@@ -26,7 +26,7 @@ export default function QuantityPicker({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-2">
         {quickPicks.map((pick, i) => (
           <motion.button
             key={pick}
@@ -39,14 +39,14 @@ export default function QuantityPicker({
             whileHover={{ scale: disabled ? 1 : 1.04 }}
             whileTap={{ scale: disabled ? 1 : 0.95 }}
             className={cn(
-              "group relative overflow-hidden rounded-xl border border-white/10 bg-ink-800/70 px-2 py-3 text-center transition-colors duration-200",
+              "group relative overflow-hidden rounded-xl border border-white/10 bg-ink-800/70 px-1.5 py-2.5 text-center transition-colors duration-200 sm:px-2 sm:py-3",
               "hover:border-gold/50 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
             )}
           >
-            <span className="block font-display text-lg font-700 text-white group-hover:text-gold transition-colors">
+            <span className="block truncate font-display text-[15px] font-700 tabular-nums text-white transition-colors group-hover:text-gold sm:text-lg">
               +{formatNumber(pick)}
             </span>
-            <span className="block text-[10px] uppercase tracking-[0.15em] text-white/35">
+            <span className="block text-[9px] uppercase tracking-[0.12em] text-white/35 sm:text-[10px] sm:tracking-[0.15em]">
               cotas
             </span>
           </motion.button>
@@ -76,7 +76,7 @@ export default function QuantityPicker({
               const raw = Number(e.target.value.replace(/\D+/g, ""));
               onChange(Number.isFinite(raw) && raw > 0 ? Math.min(raw, max) : min);
             }}
-            className="w-full bg-transparent text-center font-display text-3xl font-800 text-white outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="w-full bg-transparent text-center font-display text-2xl font-800 tabular-nums text-white outline-none sm:text-3xl [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             aria-label="Quantidade de cotas"
           />
           <span className="text-[10px] uppercase tracking-[0.2em] text-white/35">cotas</span>
@@ -93,11 +93,13 @@ export default function QuantityPicker({
         </button>
       </div>
 
-      <div className="flex items-baseline justify-between rounded-2xl border border-gold/20 bg-gold/5 px-4 py-3">
-        <span className="text-xs uppercase tracking-[0.18em] text-white/50">Total</span>
+      <div className="flex items-baseline justify-between gap-3 rounded-2xl border border-gold/20 bg-gold/5 px-4 py-3">
+        <span className="shrink-0 text-[11px] uppercase tracking-[0.15em] text-white/50 sm:text-xs sm:tracking-[0.18em]">
+          Total
+        </span>
         <AnimatedNumber
           value={formatBRL(quantity * priceCents)}
-          className="font-display text-2xl font-800 text-gradient-gold"
+          className="truncate font-display text-xl font-800 tabular-nums text-gradient-gold sm:text-2xl"
         />
       </div>
     </div>

@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { Badge, Card, useToast } from "@/components/admin/primitives";
+import { Badge, Card, Detail, useToast } from "@/components/admin/primitives";
 import { formatBRL, formatDateBR, formatDateTimeBR, padTicket } from "@/lib/utils";
 import type { OrderWithNumbers } from "@/lib/types";
 
@@ -216,9 +216,9 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
                     className="overflow-hidden border-t border-white/5"
                   >
                     <div className="space-y-5 p-5">
-                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
                         <Detail icon={Phone} label="Telefone" value={order.phone} />
-                        <Detail icon={Mail} label="E-mail" value={order.email} />
+                        <Detail icon={Mail} label="E-mail" value={order.email} multiline />
                         <Detail icon={User} label="CPF" value={order.cpf} />
                         <Detail
                           icon={User}
@@ -367,22 +367,3 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
   );
 }
 
-function Detail({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-ink-900/50 px-4 py-3">
-      <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-white/35">
-        <Icon className="size-3" />
-        {label}
-      </span>
-      <p className="mt-1 truncate text-sm text-white/85">{value}</p>
-    </div>
-  );
-}

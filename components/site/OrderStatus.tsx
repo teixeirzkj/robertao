@@ -95,7 +95,7 @@ export default function OrderStatus({
     : null;
 
   return (
-    <div className="mx-auto max-w-2xl px-5 pb-20 pt-28 lg:px-8 sm:pt-32">
+    <div className="mx-auto max-w-2xl px-5 pb-16 pt-24 sm:pb-20 sm:pt-32 lg:px-8">
       <Link
         href="/"
         className="inline-flex items-center gap-2 text-sm text-white/50 transition-colors hover:text-gold"
@@ -105,7 +105,7 @@ export default function OrderStatus({
       </Link>
 
       {/* resumo do pedido */}
-      <div className="mt-6 rounded-3xl border border-white/10 bg-ink-800/50 p-6">
+      <div className="mt-6 rounded-3xl border border-white/10 bg-ink-800/50 p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">Pedido</p>
@@ -134,7 +134,7 @@ export default function OrderStatus({
             transition={{ duration: 0.3 }}
             className="mt-4 space-y-4"
           >
-            <div className="rounded-3xl border border-gold/30 bg-gold/5 p-6">
+            <div className="rounded-3xl border border-gold/30 bg-gold/5 p-5 sm:p-6">
               <div className="flex items-center gap-2 text-gold">
                 <QrCode className="size-5" />
                 <h2 className="font-display text-base font-700">Pague com Pix para liberar</h2>
@@ -237,7 +237,7 @@ export default function OrderStatus({
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
-            className="mt-4 overflow-hidden rounded-3xl border border-gold/40 bg-ink-800/60 p-10 text-center"
+            className="mt-4 overflow-hidden rounded-3xl border border-gold/40 bg-ink-800/60 p-6 text-center sm:p-10"
           >
             <div className="flex flex-col items-center gap-5">
               <motion.div
@@ -274,11 +274,11 @@ export default function OrderStatus({
                 initial={{ scale: 0.92, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.1, type: "spring", stiffness: 220, damping: 18 }}
-                className="relative overflow-hidden rounded-3xl border border-gold bg-gold-metal bg-[length:200%_auto] animate-shine p-6 text-center text-ink-900"
+                className="relative overflow-hidden rounded-3xl border border-gold bg-gold-metal bg-[length:200%_auto] animate-shine p-5 text-center text-ink-900 sm:p-6"
               >
                 <Confetti />
                 <Gift className="mx-auto size-9" />
-                <p className="mt-2 font-display text-2xl font-800 uppercase tracking-wide">
+                <p className="mt-2 font-display text-xl font-800 uppercase tracking-wide sm:text-2xl">
                   Sua cota foi premiada!
                 </p>
                 <div className="relative mt-4 space-y-2">
@@ -326,7 +326,7 @@ export default function OrderStatus({
               </div>
             )}
 
-            <div className="rounded-3xl border border-white/10 bg-ink-800/50 p-6">
+            <div className="rounded-3xl border border-white/10 bg-ink-800/50 p-5 sm:p-6">
               <div className="mb-3 flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] text-white/40">
                   <Ticket className="size-3.5" />
@@ -383,7 +383,7 @@ export default function OrderStatus({
             key="cancelado"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-4 rounded-3xl border border-crimson/40 bg-crimson/5 p-8 text-center"
+            className="mt-4 rounded-3xl border border-crimson/40 bg-crimson/5 p-6 text-center sm:p-8"
           >
             <XCircle className="mx-auto size-9 text-crimson" />
             <p className="mt-3 font-display text-lg font-700 text-white">Pedido cancelado</p>

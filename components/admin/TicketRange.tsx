@@ -235,8 +235,8 @@ function Edge({
       <p
         className={
           destaque
-            ? "mt-3 font-mono text-4xl font-bold text-gradient-gold"
-            : "mt-3 font-mono text-4xl font-bold text-white"
+            ? "mt-3 font-mono text-3xl font-bold text-gradient-gold sm:text-4xl"
+            : "mt-3 font-mono text-3xl font-bold text-white sm:text-4xl"
         }
       >
         {padTicket(edge.number, totalNumbers)}
@@ -245,7 +245,7 @@ function Edge({
         vendida em {formatDateTimeBR(edge.soldAt)}
       </p>
 
-      <div className="mt-4 grid grid-cols-3 gap-2">
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
         <Dado rotulo="Valor da cota" valor={formatBRL(priceCents)} />
         <Dado rotulo="Cotas no pedido" valor={formatNumber(edge.order.quantity)} />
         <Dado

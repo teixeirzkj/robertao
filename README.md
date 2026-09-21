@@ -113,10 +113,10 @@ npm run dev
 
 As tabelas são criadas automaticamente na primeira consulta ao banco.
 
-> **Projeto dentro do OneDrive?** O sync transforma arquivos do `.next` em
-> placeholders na nuvem e o `next dev` quebra com `EINVAL ... readlink`. O
-> `npm run dev:local` já contorna isso: ele limpa o `.next` e o marca como
-> "sempre manter neste dispositivo" antes de subir o Next.
+> **Projeto dentro do OneDrive?** Um build antigo ou interrompido faz o Next
+> quebrar com `EINVAL ... readlink`. O `dev:local` e o `build` já contornam:
+> descartam o `.next` anterior antes de começar (só em pastas sincronizadas —
+> na Vercel o cache é preservado).
 
 ### Scripts
 

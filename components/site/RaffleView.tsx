@@ -46,11 +46,11 @@ export default function RaffleView({
   return (
     <>
       {/* ------------------------------------------------------------- hero */}
-      <section id="rifa" className="relative overflow-hidden pt-28 pb-16 sm:pt-32">
+      <section id="rifa" className="relative overflow-hidden pb-12 pt-24 sm:pb-16 sm:pt-32">
         <div className="pointer-events-none absolute inset-0 bg-ink-radial" />
 
         <div className="relative mx-auto max-w-6xl px-5 lg:px-8">
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:gap-14">
+          <div className="grid gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:gap-14">
             <motion.div
               initial={{ opacity: 0, y: 28 }}
               animate={{ opacity: 1, y: 0 }}
@@ -63,7 +63,7 @@ export default function RaffleView({
               initial={{ opacity: 0, y: 28 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col gap-6"
+              className="flex flex-col gap-5 sm:gap-6"
             >
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
@@ -88,7 +88,7 @@ export default function RaffleView({
                   {raffle.title}
                 </h1>
                 {raffle.subtitle && (
-                  <p className="text-base leading-relaxed text-white/55">{raffle.subtitle}</p>
+                  <p className="text-[15px] leading-relaxed text-white/55 sm:text-base">{raffle.subtitle}</p>
                 )}
               </div>
 
@@ -136,7 +136,7 @@ export default function RaffleView({
                     <Ticket className="size-4" />
                     Quero minhas cotas
                   </Button>
-                  <div className="flex items-center justify-center gap-5 text-[11px] text-white/35">
+                  <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[11px] text-white/35">
                     <span className="inline-flex items-center gap-1.5">
                       <ShieldCheck className="size-3.5" /> Números únicos garantidos
                     </span>
@@ -153,14 +153,14 @@ export default function RaffleView({
 
       {/* -------------------------------------------------- ganhador final */}
       {winner && (
-        <section className="relative px-5 pb-16 lg:px-8">
+        <section className="relative px-5 pb-12 sm:pb-16 lg:px-8">
           <Reveal className="mx-auto max-w-6xl">
-            <div className="overflow-hidden rounded-3xl border border-gold bg-gold-metal bg-[length:200%_auto] animate-shine p-8 text-center text-ink-900">
+            <div className="overflow-hidden rounded-3xl border border-gold bg-gold-metal bg-[length:200%_auto] animate-shine p-6 text-center text-ink-900 sm:p-8">
               <Trophy className="mx-auto size-9" />
               <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.25em]">
                 Prêmio principal
               </p>
-              <p className="mt-2 font-display text-3xl font-800">
+              <p className="mt-2 font-display text-2xl font-800 sm:text-3xl">
                 {winner.name}
               </p>
               <p className="mt-1 text-sm font-semibold">
@@ -174,7 +174,7 @@ export default function RaffleView({
 
       {/* ------------------------------------------------- cotas premiadas */}
       {raffle.prizes.length > 0 && (
-        <section id="premiadas" className="px-5 py-16 lg:px-8">
+        <section id="premiadas" className="px-5 py-12 sm:py-16 lg:px-8">
           <div className="mx-auto max-w-6xl">
             <Reveal className="mb-8 text-center">
               <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-gold">
@@ -189,25 +189,25 @@ export default function RaffleView({
               </p>
             </Reveal>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
               {raffle.prizes.map((prize, i) => (
                 <Reveal key={prize.id} delay={i * 0.05}>
                   <div
                     className={cn(
-                      "group relative h-full overflow-hidden rounded-2xl border p-5 transition-all duration-300",
+                      "group relative h-full overflow-hidden rounded-2xl border p-4 transition-all duration-300 sm:p-5",
                       prize.claimed
                         ? "border-white/5 bg-ink-800/40 opacity-55"
                         : "border-gold/25 bg-ink-800/70 shine-sweep hover:border-gold/60 hover:shadow-gold"
                     )}
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col items-start gap-2 sm:flex-row sm:justify-between sm:gap-3">
                       {prize.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={prize.image}
                           alt=""
                           className={cn(
-                            "size-12 shrink-0 rounded-xl border object-cover",
+                            "size-10 shrink-0 rounded-xl border object-cover sm:size-12",
                             prize.claimed ? "border-white/10 grayscale" : "border-gold/30"
                           )}
                         />
@@ -230,13 +230,13 @@ export default function RaffleView({
                         {prize.claimed ? "Conquistada" : "Disponível"}
                       </span>
                     </div>
-                    <p className="mt-4 font-display text-lg font-700 leading-snug text-white">
+                    <p className="mt-3 font-display text-base font-700 leading-snug text-white sm:mt-4 sm:text-lg">
                       {prize.label}
                     </p>
                     {prize.valueCents > 0 && (
-                      <p className="mt-1 text-sm text-gold/80">{formatBRL(prize.valueCents)}</p>
+                      <p className="mt-1 text-[13px] text-gold/80 sm:text-sm">{formatBRL(prize.valueCents)}</p>
                     )}
-                    <p className="mt-3 text-[11px] uppercase tracking-[0.15em] text-white/30">
+                    <p className="mt-3 text-[10px] uppercase tracking-[0.12em] text-white/30 sm:text-[11px]">
                       Número secreto
                     </p>
                   </div>
@@ -248,7 +248,7 @@ export default function RaffleView({
       )}
 
       {/* ----------------------------------------------------- como funciona */}
-      <section id="como-funciona" className="px-5 py-16 lg:px-8">
+      <section id="como-funciona" className="px-5 py-12 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <Reveal className="mb-10 text-center">
             <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-gold">
@@ -259,7 +259,7 @@ export default function RaffleView({
             </h2>
           </Reveal>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {[
               {
                 icon: Ticket,
@@ -283,12 +283,16 @@ export default function RaffleView({
               },
             ].map((item, i) => (
               <Reveal key={item.title} delay={i * 0.07}>
-                <div className="h-full rounded-2xl border border-white/10 bg-ink-800/50 p-6 transition-colors duration-300 hover:border-gold/40">
-                  <div className="flex size-11 items-center justify-center rounded-xl border border-gold/30 bg-gold/10">
+                <div className="h-full rounded-2xl border border-white/10 bg-ink-800/50 p-4 transition-colors duration-300 hover:border-gold/40 sm:p-6">
+                  <div className="flex size-10 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 sm:size-11">
                     <item.icon className="size-5 text-gold" />
                   </div>
-                  <p className="mt-4 font-display text-base font-700 text-white">{item.title}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-white/50">{item.text}</p>
+                  <p className="mt-3 font-display text-[15px] font-700 leading-snug text-white sm:mt-4 sm:text-base">
+                    {item.title}
+                  </p>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-white/50 sm:mt-2 sm:text-sm">
+                    {item.text}
+                  </p>
                 </div>
               </Reveal>
             ))}
@@ -298,11 +302,11 @@ export default function RaffleView({
 
       {/* -------------------------------------------------------- descricao */}
       {(raffle.description || raffle.rules) && (
-        <section id="regulamento" className="px-5 pb-20 lg:px-8">
+        <section id="regulamento" className="px-5 pb-16 sm:pb-20 lg:px-8">
           <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-2">
             {raffle.description && (
               <Reveal>
-                <article className="h-full rounded-3xl border border-white/10 bg-ink-800/50 p-7">
+                <article className="h-full rounded-3xl border border-white/10 bg-ink-800/50 p-5 sm:p-7">
                   <h3 className="font-display text-lg font-700 text-white">Sobre o prêmio</h3>
                   <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-white/60">
                     {raffle.description}
@@ -312,7 +316,7 @@ export default function RaffleView({
             )}
             {raffle.rules && (
               <Reveal delay={0.08}>
-                <article className="h-full rounded-3xl border border-white/10 bg-ink-800/50 p-7">
+                <article className="h-full rounded-3xl border border-white/10 bg-ink-800/50 p-5 sm:p-7">
                   <h3 className="font-display text-lg font-700 text-white">Regulamento</h3>
                   <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-white/60">
                     {raffle.rules}

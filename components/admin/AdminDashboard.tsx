@@ -226,7 +226,7 @@ function Overview({
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           label="Cotas vendidas"
           value={formatNumber(stats.sold)}
@@ -335,7 +335,7 @@ function Overview({
         </Card>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {[
           { id: "cotas" as TabId, icon: Search, title: "Cotas", text: "Buscar titular por número e ver maior/menor cota por período." },
           { id: "pedidos" as TabId, icon: ListOrdered, title: "Pedidos", text: "Lista completa com dados dos compradores." },

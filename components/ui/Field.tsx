@@ -21,7 +21,7 @@ const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
     <div className="space-y-1.5">
       <label
         htmlFor={inputId}
-        className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-white/50"
+        className="block text-[10px] font-semibold uppercase tracking-[0.1em] text-white/50 sm:text-[11px] sm:tracking-[0.12em]"
       >
         {label}
       </label>
@@ -30,7 +30,7 @@ const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
         id={inputId}
         aria-invalid={Boolean(error)}
         className={cn(
-          "w-full rounded-xl border bg-ink-800/80 px-4 py-3 text-sm text-white placeholder:text-white/25",
+          "w-full rounded-xl border bg-ink-800/80 px-3 py-3 text-[13px] text-white placeholder:text-white/25 sm:px-4 sm:text-sm",
           "transition-colors duration-200 outline-none",
           error
             ? "border-crimson/70 focus:border-crimson"

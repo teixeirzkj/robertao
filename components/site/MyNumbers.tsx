@@ -53,7 +53,7 @@ export default function MyNumbers({ totalNumbers }: { totalNumbers: number }) {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-5 pb-20 pt-28 lg:px-8 sm:pt-32">
+    <div className="mx-auto max-w-3xl px-5 pb-16 pt-24 sm:pb-20 sm:pt-32 lg:px-8">
       <Link
         href="/"
         className="inline-flex items-center gap-2 text-sm text-white/50 transition-colors hover:text-gold"
@@ -110,7 +110,7 @@ export default function MyNumbers({ totalNumbers }: { totalNumbers: number }) {
               return (
                 <div
                   key={order.id}
-                  className="rounded-3xl border border-white/10 bg-ink-800/50 p-6"
+                  className="rounded-3xl border border-white/10 bg-ink-800/50 p-5 sm:p-6"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>

@@ -149,7 +149,7 @@ export default function CheckoutModal({
               )}
             </div>
 
-            <form onSubmit={submit} className="space-y-4 p-5">
+            <form onSubmit={submit} className="space-y-3.5 p-4 sm:space-y-4 sm:p-5">
               <div className="flex items-center justify-between rounded-2xl border border-gold/20 bg-gold/5 px-4 py-3">
                 <div>
                   <p className="font-display text-xl font-800 text-white">
@@ -171,10 +171,10 @@ export default function CheckoutModal({
                 error={errors.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <Field
                   label="Telefone / WhatsApp"
-                  placeholder="(11) 99999-9999"
+                  placeholder="(11) 90000-0000"
                   inputMode="tel"
                   autoComplete="tel"
                   value={form.phone}

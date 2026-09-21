@@ -7,10 +7,11 @@
     "dev:local": "node scripts/dev-local.mjs",
     "dev:db": "node scripts/dev-db.mjs",
     "seed": "node scripts/seed.mjs",
+    "reset": "node scripts/reset-db.mjs",
+    "prebuild": "node scripts/prepare-next.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "reset": "node scripts/reset-db.mjs"
+    "lint": "next lint"
   },
   "dependencies": {
     "clsx": "^2.1.1",
