@@ -122,7 +122,7 @@ export default function CheckoutModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[60] flex items-end justify-center bg-black/80 backdrop-blur-sm sm:items-center sm:p-6"
+          className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/40 backdrop-blur-sm sm:items-center sm:p-6"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget && !sending) close();
           }}
@@ -134,15 +134,15 @@ export default function CheckoutModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.98 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-white/10 bg-ink-900 shadow-card-hover sm:rounded-3xl"
+            className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-ink/10 bg-paper shadow-card-hover sm:rounded-3xl"
           >
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/5 bg-ink-900/95 px-5 py-4 backdrop-blur">
-              <h2 className="font-display text-base font-700 text-white">Seus dados</h2>
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-ink/8 bg-paper/95 px-5 py-4 backdrop-blur">
+              <h2 className="font-display text-base font-700 text-ink">Seus dados</h2>
               {!sending && (
                 <button
                   onClick={close}
                   aria-label="Fechar"
-                  className="flex size-9 items-center justify-center rounded-full border border-white/10 text-white/60 transition-colors hover:border-gold/50 hover:text-gold cursor-pointer"
+                  className="flex size-9 items-center justify-center rounded-full border border-ink/10 text-ink/65 transition-colors hover:border-gold/50 hover:text-gold cursor-pointer"
                 >
                   <X className="size-4" />
                 </button>
@@ -152,11 +152,11 @@ export default function CheckoutModal({
             <form onSubmit={submit} className="space-y-3.5 p-4 sm:space-y-4 sm:p-5">
               <div className="flex items-center justify-between rounded-2xl border border-gold/20 bg-gold/5 px-4 py-3">
                 <div>
-                  <p className="font-display text-xl font-800 text-white">
+                  <p className="font-display text-xl font-800 text-ink">
                     {formatNumber(quantity)}{" "}
-                    <span className="text-sm font-normal text-white/50">cotas</span>
+                    <span className="text-sm font-normal text-ink/55">cotas</span>
                   </p>
-                  <p className="text-xs text-white/40">{raffle.title}</p>
+                  <p className="text-xs text-ink/45">{raffle.title}</p>
                 </div>
                 <span className="font-display text-xl font-800 text-gradient-gold">
                   {formatBRL(totalCents)}
@@ -230,10 +230,10 @@ export default function CheckoutModal({
                 )}
               </AnimatePresence>
 
-              <div className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-ink-800/60 px-4 py-3">
+              <div className="flex items-start gap-2.5 rounded-xl border border-ink/10 bg-white px-4 py-3">
                 <Lock className="mt-0.5 size-4 shrink-0 text-gold" />
-                <p className="text-[11px] leading-relaxed text-white/50">
-                  Seus números são sorteados <strong className="text-white/75">após a
+                <p className="text-[11px] leading-relaxed text-ink/55">
+                  Seus números são sorteados <strong className="text-ink/75">após a
                   confirmação do pagamento</strong>. No próximo passo você paga e vê as cotas
                   na hora.
                 </p>
@@ -252,7 +252,7 @@ export default function CheckoutModal({
                   </>
                 )}
               </Button>
-              <p className="text-center text-[11px] leading-relaxed text-white/30">
+              <p className="text-center text-[11px] leading-relaxed text-ink/35">
                 Seus dados são usados apenas para identificar o titular das cotas e entrar em
                 contato caso você seja premiado.
               </p>

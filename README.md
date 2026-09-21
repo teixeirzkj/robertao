@@ -30,6 +30,11 @@ O fluxo de compra:
    premiada!"** com confete e o prêmio.
 
 A quantidade de cotas disponíveis não é exibida no site — só a porcentagem vendida.
+Os números das cotas premiadas são públicos; acima de 4 prêmios a lista mostra os
+4 primeiros e um botão "ver todas".
+
+O visual é claro (branco e dourado) e o painel, no celular, troca a barra de abas
+por um menu com todas as seções.
 
 **Painel administrativo (`/admin`)**
 
@@ -37,10 +42,10 @@ A quantidade de cotas disponíveis não é exibida no site — só a porcentagem
 | --- | --- |
 | Visão geral | Cotas vendidas, reservadas e livres, arrecadação, pedidos pendentes, prêmios conquistados. |
 | Rifa | Edita título, subtítulo, descrição, regulamento, imagens, valor da cota, total de cotas, mínimo/máximo por compra, atalhos de quantidade, data e status, dificuldade das cotas premiadas, janela de reserva, chave Pix e contatos. |
-| Cotas premiadas | Cadastra, **edita** (nome, valor, imagem, número) e **exclui** prêmios. Sorteia os números secretos ou define manualmente. Mostra quem conquistou cada um. |
+| Cotas premiadas | Cadastra, **edita** (nome, valor, imagem, número) e **exclui** prêmios. Sorteia os números ou define manualmente. Mostra quem conquistou cada um. |
 | Pedidos | Todas as compras com os dados do comprador e as cotas adquiridas. Busca por nome, CPF, telefone, e-mail, código ou número da cota. **Confirmar pagamento sorteia as cotas.** Cancelar ou voltar para pendente devolve as cotas à rifa. |
 | Cotas | Duas consultas: o titular de um número específico, e a **maior e a menor cota vendida em um período** (ex.: até 20/12 às 18h), com os dados de quem comprou e botão para ligar. |
-| Sorteio final | Sorteia o prêmio principal entre as cotas pagas e mostra os dados do ganhador. |
+| Cota vencedora | O sorteio é feito pela Loteria Federal. Busque a cota sorteada, confira o titular e registre — o site publica na hora o ganhador e o número. |
 
 ## Confirmação de pagamento
 

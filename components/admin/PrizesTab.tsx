@@ -219,7 +219,7 @@ export default function PrizesTab({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.25 }}
-              className="rounded-2xl border border-white/10 bg-ink-800/50 p-5"
+              className="rounded-2xl border border-ink/10 bg-white p-5"
             >
               {editingId === prize.id ? (
                 /* ------------------------------------------------ modo edição */
@@ -229,7 +229,7 @@ export default function PrizesTab({
                     <button
                       onClick={() => setEditingId(null)}
                       aria-label="Cancelar edição"
-                      className="flex size-8 items-center justify-center rounded-lg border border-white/10 text-white/50 transition-colors hover:text-white cursor-pointer"
+                      className="flex size-8 items-center justify-center rounded-lg border border-ink/10 text-ink/55 transition-colors hover:text-ink cursor-pointer"
                     >
                       <X className="size-4" />
                     </button>
@@ -250,7 +250,7 @@ export default function PrizesTab({
                   </div>
 
                   <div className="flex items-end gap-3">
-                    <div className="size-14 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-ink-900">
+                    <div className="size-14 shrink-0 overflow-hidden rounded-xl border border-ink/10 bg-paper">
                       {draft.image ? (
                         <img
                           src={draft.image}
@@ -261,7 +261,7 @@ export default function PrizesTab({
                           }}
                         />
                       ) : (
-                        <span className="flex size-full items-center justify-center text-white/25">
+                        <span className="flex size-full items-center justify-center text-ink/30">
                           <ImageOff className="size-5" />
                         </span>
                       )}
@@ -277,7 +277,7 @@ export default function PrizesTab({
                   </div>
 
                   {prize.orderId ? (
-                    <p className="rounded-xl border border-gold/25 bg-gold/5 px-4 py-2.5 text-xs text-white/55">
+                    <p className="rounded-xl border border-gold/25 bg-gold/5 px-4 py-2.5 text-xs text-ink/60">
                       A cota {padTicket(prize.number!, totalNumbers)} já foi conquistada e não
                       pode mudar de número.
                     </p>
@@ -327,10 +327,10 @@ export default function PrizesTab({
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-display text-base font-700 text-white">
+                        <p className="font-display text-base font-700 text-ink">
                           {prize.label}
                         </p>
-                        <p className="text-xs text-white/40">
+                        <p className="text-xs text-ink/45">
                           {prize.valueCents > 0
                             ? formatBRL(prize.valueCents)
                             : "Sem valor definido"}
@@ -356,7 +356,7 @@ export default function PrizesTab({
                         onClick={() => startEdit(prize)}
                         aria-label="Editar prêmio"
                         title="Editar"
-                        className="flex size-9 items-center justify-center rounded-xl border border-white/10 text-white/50 transition-colors hover:border-gold/50 hover:text-gold cursor-pointer"
+                        className="flex size-9 items-center justify-center rounded-xl border border-ink/10 text-ink/55 transition-colors hover:border-gold/50 hover:text-gold cursor-pointer"
                       >
                         <Pencil className="size-4" />
                       </button>
@@ -379,7 +379,7 @@ export default function PrizesTab({
                         }}
                         aria-label="Excluir prêmio"
                         title="Excluir"
-                        className="flex size-9 items-center justify-center rounded-xl border border-white/10 text-white/45 transition-colors hover:border-crimson/50 hover:text-crimson cursor-pointer disabled:opacity-30"
+                        className="flex size-9 items-center justify-center rounded-xl border border-ink/10 text-ink/50 transition-colors hover:border-crimson/50 hover:text-crimson cursor-pointer disabled:opacity-30"
                       >
                         <Trash2 className="size-4" />
                       </button>
@@ -388,8 +388,8 @@ export default function PrizesTab({
 
                   {prize.orderId && (
                     <div className="mt-4 rounded-xl border border-gold/25 bg-gold/5 px-4 py-3 text-sm">
-                      <p className="font-semibold text-white">{prize.buyerName}</p>
-                      <p className="text-xs text-white/50">
+                      <p className="font-semibold text-ink">{prize.buyerName}</p>
+                      <p className="text-xs text-ink/55">
                         {prize.buyerPhone} · Pedido {prize.orderCode} ·{" "}
                         {formatDateTimeBR(prize.claimedAt)}
                       </p>
@@ -402,9 +402,9 @@ export default function PrizesTab({
         </AnimatePresence>
 
         {prizes.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-white/10 py-12 text-center">
-            <Gift className="mx-auto size-8 text-white/20" />
-            <p className="mt-3 text-sm text-white/40">Nenhuma cota premiada cadastrada ainda.</p>
+          <div className="rounded-2xl border border-dashed border-ink/10 py-12 text-center">
+            <Gift className="mx-auto size-8 text-ink/25" />
+            <p className="mt-3 text-sm text-ink/45">Nenhuma cota premiada cadastrada ainda.</p>
           </div>
         )}
       </div>

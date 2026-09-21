@@ -1,5 +1,5 @@
-import { clearGrandPrize, drawGrandPrize, getGrandWinner } from "@/lib/raffle";
-import { handleError, ok, readJson, requireAdmin } from "@/lib/api";
+import { clearGrandPrize, getGrandWinner, setWinnerTicket } from "@/lib/raffle";
+import { fail, handleError, ok, readJson, requireAdmin } from "@/lib/api";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,13 +14,20 @@ export async function GET() {
   }
 }
 
-/** Sorteio do premio maximo entre todas as cotas vendidas. */
+/**
+ * Registra a cota vencedora do premio principal.
+ * O sorteio e feito pela Loteria Federal; aqui o admin informa o numero.
+ */
 export async function POST(req: Request) {
   const denied = await requireAdmin();
   if (denied) return denied;
   try {
     const body = await readJson(req);
-    const winner = await drawGrandPrize(Boolean(body.force));
+    const number = Math.round(Number(String(body.number ?? "").replace(/\D+/g, "")));
+    if (!Number.isFinite(number) || number < 1) {
+      return fail("Informe o numero da cota sorteada.");
+    }
+    const winner = await setWinnerTicket(number, Boolean(body.force));
     return ok({ winner });
   } catch (err) {
     return handleError(err);

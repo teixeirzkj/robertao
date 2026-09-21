@@ -5,23 +5,37 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: {
-          DEFAULT: "#050505",
-          900: "#0a0a0b",
-          800: "#111113",
-          700: "#18181b",
-          600: "#212124",
-          500: "#2a2a2e",
+        /** Superfícies claras: página, cartões, campos e trilhas. */
+        paper: {
+          DEFAULT: "#f7f5f0",
+          50: "#fdfcfa",
+          100: "#f2efe7",
+          200: "#e8e3d6",
+          300: "#dcd5c4",
         },
+        /** Texto e traços escuros. Usado com opacidade: text-ink/60 etc. */
+        ink: {
+          DEFAULT: "#1c1813",
+          900: "#1c1813",
+          800: "#2a251d",
+          700: "#3c352b",
+          600: "#5a5245",
+          500: "#736a5b",
+        },
+        /**
+         * Dourado calibrado para fundo claro: o DEFAULT passa contraste AA
+         * como texto; `light`/`bright` servem para preenchimentos e brilhos.
+         */
         gold: {
-          DEFAULT: "#d4af37",
-          light: "#f4e2a8",
-          bright: "#ffd875",
-          dim: "#a3812a",
+          DEFAULT: "#8a6b1c",
+          dim: "#6d5416",
+          light: "#c9a227",
+          bright: "#e8c55a",
+          pale: "#f4e8c4",
         },
         crimson: {
-          DEFAULT: "#e8384f",
-          dim: "#b32c3f",
+          DEFAULT: "#a8202f",
+          dim: "#7d1622",
         },
       },
       fontFamily: {
@@ -34,16 +48,17 @@ const config: Config = {
       },
       backgroundImage: {
         "gold-metal":
-          "linear-gradient(135deg, #a3812a 0%, #f4e2a8 25%, #d4af37 50%, #ffd875 65%, #a3812a 100%)",
-        "ink-radial":
-          "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(212,175,55,0.15), transparent), radial-gradient(ellipse 60% 50% at 90% 10%, rgba(232,56,79,0.08), transparent)",
+          "linear-gradient(135deg, #a3812a 0%, #f0d97a 25%, #d4af37 50%, #f6e6a8 65%, #a3812a 100%)",
+        "paper-radial":
+          "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(201,162,39,0.18), transparent), radial-gradient(ellipse 60% 50% at 90% 10%, rgba(168,32,47,0.05), transparent)",
         noise: "url('/noise.png')",
       },
       boxShadow: {
-        gold: "0 0 0 1px rgba(212,175,55,0.4), 0 8px 30px -8px rgba(212,175,55,0.35)",
-        "gold-lg": "0 0 0 1px rgba(212,175,55,0.5), 0 20px 60px -12px rgba(212,175,55,0.45)",
-        card: "0 4px 24px -6px rgba(0,0,0,0.5)",
-        "card-hover": "0 20px 50px -12px rgba(0,0,0,0.7)",
+        gold: "0 0 0 1px rgba(138,107,28,0.35), 0 8px 24px -10px rgba(138,107,28,0.35)",
+        "gold-lg":
+          "0 0 0 1px rgba(138,107,28,0.45), 0 18px 45px -14px rgba(138,107,28,0.45)",
+        card: "0 1px 2px rgba(28,24,19,0.05), 0 8px 24px -14px rgba(28,24,19,0.18)",
+        "card-hover": "0 2px 4px rgba(28,24,19,0.06), 0 22px 50px -18px rgba(28,24,19,0.28)",
       },
       keyframes: {
         shine: {

@@ -41,8 +41,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               className={cn(
                 "pointer-events-auto flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm backdrop-blur",
                 t.kind === "ok"
-                  ? "border-gold/40 bg-ink-800/95 text-white"
-                  : "border-crimson/50 bg-ink-800/95 text-crimson"
+                  ? "border-gold/40 bg-white text-ink"
+                  : "border-crimson/50 bg-white text-crimson"
               )}
             >
               {t.kind === "ok" ? (
@@ -76,13 +76,13 @@ export function Card({
 }) {
   return (
     <section
-      className={cn("rounded-2xl border border-white/10 bg-ink-800/50 p-4 sm:p-6", className)}
+      className={cn("rounded-2xl border border-ink/10 bg-white p-4 sm:p-6", className)}
     >
       {(title || action) && (
         <header className="mb-4 flex flex-wrap items-start justify-between gap-3 sm:mb-5">
           <div>
-            {title && <h2 className="font-display text-base font-700 text-white">{title}</h2>}
-            {description && <p className="mt-1 text-xs text-white/45">{description}</p>}
+            {title && <h2 className="font-display text-base font-700 text-ink">{title}</h2>}
+            {description && <p className="mt-1 text-xs text-ink/50">{description}</p>}
           </div>
           {action}
         </header>
@@ -112,24 +112,24 @@ export function StatCard({
       transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
         "rounded-2xl border p-4 sm:p-5",
-        accent ? "border-gold/30 bg-gold/5" : "border-white/10 bg-ink-800/50"
+        accent ? "border-gold/30 bg-gold/5" : "border-ink/10 bg-white"
       )}
     >
       <div className="flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-[0.12em] text-white/40 sm:text-[11px]">
+        <span className="text-[10px] uppercase tracking-[0.12em] text-ink/45 sm:text-[11px]">
           {label}
         </span>
-        <Icon className={cn("size-4", accent ? "text-gold" : "text-white/35")} />
+        <Icon className={cn("size-4", accent ? "text-gold" : "text-ink/40")} />
       </div>
       <p
         className={cn(
           "mt-2 font-display text-xl font-800 sm:mt-3 sm:text-2xl",
-          accent ? "text-gradient-gold" : "text-white"
+          accent ? "text-gradient-gold" : "text-ink"
         )}
       >
         {value}
       </p>
-      {hint && <p className="mt-1 text-[11px] leading-snug text-white/35 sm:text-xs">{hint}</p>}
+      {hint && <p className="mt-1 text-[11px] leading-snug text-ink/40 sm:text-xs">{hint}</p>}
     </motion.div>
   );
 }
@@ -144,17 +144,17 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export function Input({ label, hint, className, ...props }: InputProps) {
   return (
     <label className="block space-y-1.5">
-      <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-white/45">
+      <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/50">
         {label}
       </span>
       <input
         className={cn(
-          "w-full rounded-xl border border-white/10 bg-ink-900/70 px-4 py-2.5 text-sm text-white outline-none transition-colors placeholder:text-white/25 hover:border-white/20 focus:border-gold/60",
+          "w-full rounded-xl border border-ink/10 bg-paper-50 px-4 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-ink/30 hover:border-ink/15 focus:border-gold/60",
           className
         )}
         {...props}
       />
-      {hint && <span className="block text-[11px] text-white/30">{hint}</span>}
+      {hint && <span className="block text-[11px] text-ink/35">{hint}</span>}
     </label>
   );
 }
@@ -167,17 +167,17 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 export function Textarea({ label, hint, className, ...props }: TextareaProps) {
   return (
     <label className="block space-y-1.5">
-      <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-white/45">
+      <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/50">
         {label}
       </span>
       <textarea
         className={cn(
-          "w-full resize-y rounded-xl border border-white/10 bg-ink-900/70 px-4 py-3 text-sm leading-relaxed text-white outline-none transition-colors placeholder:text-white/25 hover:border-white/20 focus:border-gold/60",
+          "w-full resize-y rounded-xl border border-ink/10 bg-paper-50 px-4 py-3 text-sm leading-relaxed text-ink outline-none transition-colors placeholder:text-ink/30 hover:border-ink/15 focus:border-gold/60",
           className
         )}
         {...props}
       />
-      {hint && <span className="block text-[11px] text-white/30">{hint}</span>}
+      {hint && <span className="block text-[11px] text-ink/35">{hint}</span>}
     </label>
   );
 }
@@ -190,18 +190,18 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 export function Select({ label, options, className, ...props }: SelectProps) {
   return (
     <label className="block space-y-1.5">
-      <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-white/45">
+      <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/50">
         {label}
       </span>
       <select
         className={cn(
-          "w-full cursor-pointer rounded-xl border border-white/10 bg-ink-900/70 px-4 py-2.5 text-sm text-white outline-none transition-colors hover:border-white/20 focus:border-gold/60",
+          "w-full cursor-pointer rounded-xl border border-ink/10 bg-paper-50 px-4 py-2.5 text-sm text-ink outline-none transition-colors hover:border-ink/15 focus:border-gold/60",
           className
         )}
         {...props}
       >
         {options.map((opt) => (
-          <option key={opt.value} value={opt.value} className="bg-ink-800">
+          <option key={opt.value} value={opt.value} className="bg-paper-100">
             {opt.label}
           </option>
         ))}
@@ -227,14 +227,14 @@ export function Detail({
   multiline?: boolean;
 }) {
   return (
-    <div className="min-w-0 rounded-xl border border-white/10 bg-ink-900/50 px-3 py-2.5 sm:px-4 sm:py-3">
-      <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-white/35">
+    <div className="min-w-0 rounded-xl border border-ink/10 bg-paper-50 px-3 py-2.5 sm:px-4 sm:py-3">
+      <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-ink/40">
         <Icon className="size-3" />
         {label}
       </span>
       <p
         className={cn(
-          "mt-1 text-[13px] text-white/85 sm:text-sm",
+          "mt-1 text-[13px] text-ink/85 sm:text-sm",
           multiline ? "break-all leading-snug" : "truncate"
         )}
       >
@@ -257,7 +257,7 @@ export function Badge({
         "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em]",
         tone === "ouro" && "border-gold/50 bg-gold/10 text-gold",
         tone === "erro" && "border-crimson/50 bg-crimson/10 text-crimson",
-        tone === "neutro" && "border-white/15 bg-white/5 text-white/55"
+        tone === "neutro" && "border-ink/12 bg-ink/5 text-ink/60"
       )}
     >
       {children}

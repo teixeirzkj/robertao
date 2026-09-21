@@ -37,10 +37,10 @@ export default function SiteHeader({ instagram }: { instagram?: string }) {
       className="fixed inset-x-0 top-0 z-50"
       animate={{
         backdropFilter: scrolled ? "blur(16px)" : "blur(0px)",
-        backgroundColor: scrolled ? "rgba(10,10,11,0.78)" : "rgba(10,10,11,0)",
+        backgroundColor: scrolled ? "rgba(247,245,240,0.85)" : "rgba(247,245,240,0)",
         boxShadow: scrolled
-          ? "0 1px 0 rgba(212,175,55,0.15), 0 10px 30px -15px rgba(0,0,0,0.8)"
-          : "0 0 0 rgba(0,0,0,0)",
+          ? "0 1px 0 rgba(138,107,28,0.18), 0 10px 30px -18px rgba(28,24,19,0.25)"
+          : "0 0 0 rgba(28,24,19,0)",
       }}
       transition={{ duration: 0.25, ease: "easeOut" }}
     >
@@ -53,7 +53,7 @@ export default function SiteHeader({ instagram }: { instagram?: string }) {
           <span className="font-display text-lg font-800 tracking-tight text-gradient-gold sm:text-xl">
             ROBERTÃO
           </span>
-          <span className="font-display text-lg font-800 tracking-tight text-white sm:text-xl">
+          <span className="font-display text-lg font-800 tracking-tight text-ink sm:text-xl">
             RIFAS
           </span>
         </Link>
@@ -63,7 +63,7 @@ export default function SiteHeader({ instagram }: { instagram?: string }) {
             <Link
               key={link.href}
               href={link.href}
-              className="group relative text-sm text-white/70 transition-colors duration-200 hover:text-gold"
+              className="group relative text-sm text-ink/70 transition-colors duration-200 hover:text-gold"
             >
               {link.label}
               <span className="absolute -bottom-1 left-0 h-px w-0 bg-gold transition-all duration-300 group-hover:w-full" />
@@ -87,7 +87,7 @@ export default function SiteHeader({ instagram }: { instagram?: string }) {
               target="_blank"
               rel="noreferrer"
               aria-label="Instagram"
-              className="hidden size-9 items-center justify-center rounded-full border border-white/10 text-white/70 transition-colors hover:border-gold/50 hover:text-gold sm:flex"
+              className="hidden size-9 items-center justify-center rounded-full border border-ink/10 text-ink/70 transition-colors hover:border-gold/50 hover:text-gold sm:flex"
             >
               <InstagramIcon />
             </a>
@@ -96,7 +96,7 @@ export default function SiteHeader({ instagram }: { instagram?: string }) {
           <button
             onClick={() => setMobileOpen(true)}
             aria-label="Abrir menu"
-            className="flex size-9 items-center justify-center rounded-full border border-white/10 text-white lg:hidden cursor-pointer"
+            className="flex size-9 items-center justify-center rounded-full border border-ink/10 text-ink lg:hidden cursor-pointer"
           >
             <Menu className="size-4" />
           </button>
@@ -109,14 +109,14 @@ export default function SiteHeader({ instagram }: { instagram?: string }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-ink-900/98 backdrop-blur-xl lg:hidden"
+            className="fixed inset-0 z-50 bg-paper/95 backdrop-blur-xl lg:hidden"
           >
             <div className="flex h-[62px] items-center justify-between px-5">
               <span className="font-display text-lg font-800 text-gradient-gold">MENU</span>
               <button
                 onClick={() => setMobileOpen(false)}
                 aria-label="Fechar menu"
-                className="flex size-9 items-center justify-center rounded-full border border-white/10 text-white cursor-pointer"
+                className="flex size-9 items-center justify-center rounded-full border border-ink/10 text-ink cursor-pointer"
               >
                 <X className="size-4" />
               </button>
@@ -135,7 +135,7 @@ export default function SiteHeader({ instagram }: { instagram?: string }) {
                   <Link
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className="block border-b border-white/5 py-4 font-display text-2xl font-semibold text-white"
+                    className="block border-b border-ink/8 py-4 font-display text-2xl font-semibold text-ink"
                   >
                     {link.label}
                   </Link>

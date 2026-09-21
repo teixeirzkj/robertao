@@ -19,7 +19,7 @@ export default function ProgressBar({
   return (
     <div
       ref={ref}
-      className={cn("h-1.5 w-full overflow-hidden rounded-full bg-ink-600", trackClassName)}
+      className={cn("h-1.5 w-full overflow-hidden rounded-full bg-paper-200", trackClassName)}
     >
       <motion.div
         initial={{ width: 0 }}

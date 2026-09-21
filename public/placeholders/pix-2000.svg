@@ -1,45 +1,45 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-label="R$ 2.000 no Pix">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#18181b"/>
-      <stop offset="55%" stop-color="#0a0a0b"/>
-      <stop offset="100%" stop-color="#050505"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="55%" stop-color="#fdfcfa"/>
+      <stop offset="100%" stop-color="#f2efe7"/>
     </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="38%" r="62%">
-      <stop offset="0%" stop-color="#d4af37" stop-opacity="0.4"/>
-      <stop offset="100%" stop-color="#d4af37" stop-opacity="0"/>
+    <radialGradient id="glow" cx="50%" cy="34%" r="64%">
+      <stop offset="0%" stop-color="#c9a227" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#c9a227" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0.3">
-      <stop offset="0%" stop-color="#a3812a"/>
-      <stop offset="28%" stop-color="#f4e2a8"/>
-      <stop offset="52%" stop-color="#ffd875"/>
-      <stop offset="78%" stop-color="#d4af37"/>
-      <stop offset="100%" stop-color="#a3812a"/>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0.35">
+      <stop offset="0%" stop-color="#6d5416"/>
+      <stop offset="26%" stop-color="#c9a227"/>
+      <stop offset="50%" stop-color="#a3812a"/>
+      <stop offset="76%" stop-color="#c9a227"/>
+      <stop offset="100%" stop-color="#6d5416"/>
     </linearGradient>
   </defs>
 
   <rect width="1200" height="900" fill="url(#bg)"/>
   <rect width="1200" height="900" fill="url(#glow)"/>
 
-  <g opacity="0.07" stroke="#d4af37" stroke-width="1.5" fill="none">
+  <g opacity="0.16" stroke="#a3812a" stroke-width="1.5" fill="none">
     <circle cx="600" cy="420" r="250"/>
     <circle cx="600" cy="420" r="320"/>
     <circle cx="600" cy="420" r="390"/>
   </g>
 
-  <text x="600" y="235" text-anchor="middle" fill="#d4af37" font-family="Sora,Inter,sans-serif"
+  <text x="600" y="235" text-anchor="middle" fill="#8a6b1c" font-family="Sora,Inter,sans-serif"
         font-size="30" font-weight="700" letter-spacing="13">PREMIO PRINCIPAL</text>
 
   <text x="600" y="470" text-anchor="middle" fill="url(#gold)" font-family="Sora,Inter,sans-serif"
         font-size="215" font-weight="800" letter-spacing="-6">R$ 2.000</text>
 
-  <text x="600" y="565" text-anchor="middle" fill="#f5f4f1" font-family="Sora,Inter,sans-serif"
-        font-size="60" font-weight="700" letter-spacing="10" opacity="0.92">NO PIX</text>
+  <text x="600" y="565" text-anchor="middle" fill="#1c1813" font-family="Sora,Inter,sans-serif"
+        font-size="60" font-weight="700" letter-spacing="10" opacity="0.88">NO PIX</text>
 
-  <rect x="405" y="640" width="390" height="76" rx="38" fill="none" stroke="#d4af37" stroke-opacity="0.45" stroke-width="2"/>
-  <text x="600" y="689" text-anchor="middle" fill="#f4e2a8" font-family="Inter,sans-serif"
+  <rect x="405" y="640" width="390" height="76" rx="38" fill="#ffffff" stroke="#a3812a" stroke-opacity="0.5" stroke-width="2"/>
+  <text x="600" y="689" text-anchor="middle" fill="#8a6b1c" font-family="Inter,sans-serif"
         font-size="30" font-weight="600" letter-spacing="2">cotas a R$ 0,25</text>
 
-  <text x="600" y="800" text-anchor="middle" fill="#ffffff" fill-opacity="0.35"
-        font-family="Inter,sans-serif" font-size="26" letter-spacing="4">6.250 COTAS · 4 COTAS PREMIADAS</text>
+  <text x="600" y="800" text-anchor="middle" fill="#1c1813" fill-opacity="0.42"
+        font-family="Inter,sans-serif" font-size="26" letter-spacing="4">6.250 COTAS · 10 COTAS PREMIADAS</text>
 </svg>

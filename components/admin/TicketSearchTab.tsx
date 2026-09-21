@@ -58,14 +58,14 @@ export default function TicketSearchTab({
       >
         <form onSubmit={search} className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
-            <Ticket className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/30" />
+            <Ticket className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-ink/35" />
             <input
               value={value}
               onChange={(e) => setValue(e.target.value)}
               inputMode="numeric"
               autoFocus
               placeholder={`Número da cota (1 a ${totalNumbers})`}
-              className="w-full rounded-xl border border-white/10 bg-ink-900/70 py-3.5 pl-11 pr-4 font-mono text-lg text-white outline-none transition-colors placeholder:font-body placeholder:text-sm placeholder:text-white/25 focus:border-gold/60"
+              className="w-full rounded-xl border border-ink/10 bg-paper-50 py-3.5 pl-11 pr-4 font-mono text-lg text-ink outline-none transition-colors placeholder:font-body placeholder:text-sm placeholder:text-ink/30 focus:border-gold/60"
             />
           </div>
           <Button type="submit" size="lg" loading={loading}>
@@ -86,7 +86,7 @@ export default function TicketSearchTab({
             className="space-y-4"
           >
             <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-gold/30 bg-gold/5 p-6">
-              <div className="rounded-2xl border border-gold/50 bg-ink-900/70 px-5 py-3">
+              <div className="rounded-2xl border border-gold/50 bg-paper-50 px-5 py-3">
                 <span className="font-mono text-3xl font-bold text-gradient-gold">
                   {padTicket(result.number, totalNumbers)}
                 </span>
@@ -113,7 +113,7 @@ export default function TicketSearchTab({
                     <Gift className="size-5 text-gold" />
                   </div>
                   <div>
-                    <p className="font-display text-base font-700 text-white">
+                    <p className="font-display text-base font-700 text-ink">
                       {result.prize.label}
                     </p>
                     {result.prize.valueCents > 0 && (
@@ -128,10 +128,10 @@ export default function TicketSearchTab({
               <Card title="Titular da cota">
                 <div className="space-y-4">
                   <div>
-                    <p className="font-display text-xl font-800 text-white">
+                    <p className="font-display text-xl font-800 text-ink">
                       {result.order.name}
                     </p>
-                    <p className="text-xs text-white/40">
+                    <p className="text-xs text-ink/45">
                       Pedido {result.order.code} · {result.order.quantity} cota(s) ·{" "}
                       {formatBRL(result.order.totalCents)} ·{" "}
                       {formatDateTimeBR(result.order.createdAt)}
@@ -172,11 +172,11 @@ export default function TicketSearchTab({
                     </Button>
                   </div>
 
-                  <div className="rounded-xl border border-white/10 bg-ink-900/50 px-4 py-3">
-                    <span className="text-[10px] uppercase tracking-[0.15em] text-white/35">
+                  <div className="rounded-xl border border-ink/10 bg-paper-50 px-4 py-3">
+                    <span className="text-[10px] uppercase tracking-[0.15em] text-ink/40">
                       Status do pagamento
                     </span>
-                    <p className="mt-1 text-sm text-white/85">
+                    <p className="mt-1 text-sm text-ink/85">
                       {result.order.status === "pago"
                         ? `Pago em ${formatDateTimeBR(result.order.paidAt)}`
                         : result.order.status === "cancelado"
@@ -188,7 +188,7 @@ export default function TicketSearchTab({
               </Card>
             ) : (
               <Card>
-                <p className="py-6 text-center text-sm text-white/40">
+                <p className="py-6 text-center text-sm text-ink/45">
                   Esta cota ainda não foi vendida — nenhum titular vinculado.
                 </p>
               </Card>
@@ -198,7 +198,7 @@ export default function TicketSearchTab({
       </AnimatePresence>
       </div>
 
-      <div className="border-t border-white/5 pt-8">
+      <div className="border-t border-ink/8 pt-8">
         <TicketRange totalNumbers={totalNumbers} priceCents={priceCents} />
       </div>
     </div>

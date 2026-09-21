@@ -142,7 +142,7 @@ export default function RaffleTab({
               animate={{ opacity: 1, y: 0 }}
               className="flex items-center gap-3"
             >
-              <div className="size-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-ink-900">
+              <div className="size-12 shrink-0 overflow-hidden rounded-xl border border-ink/10 bg-paper">
                 {img ? (
                   <img
                     src={img}
@@ -162,13 +162,13 @@ export default function RaffleTab({
                   set("images", next);
                 }}
                 placeholder="https://..."
-                className="flex-1 rounded-xl border border-white/10 bg-ink-900/70 px-4 py-2.5 text-sm text-white outline-none transition-colors placeholder:text-white/25 focus:border-gold/60"
+                className="flex-1 rounded-xl border border-ink/10 bg-paper-50 px-4 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-ink/30 focus:border-gold/60"
               />
               <button
                 type="button"
                 onClick={() => set("images", form.images.filter((_, idx) => idx !== i))}
                 aria-label="Remover imagem"
-                className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/10 text-white/50 transition-colors hover:border-crimson/50 hover:text-crimson cursor-pointer"
+                className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-ink/10 text-ink/55 transition-colors hover:border-crimson/50 hover:text-crimson cursor-pointer"
               >
                 <Trash2 className="size-4" />
               </button>

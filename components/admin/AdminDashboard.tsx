@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BarChart3,
+  ChevronDown,
   DollarSign,
   ExternalLink,
   Gift,
@@ -39,7 +40,7 @@ const TABS: { id: TabId; label: string; icon: React.ComponentType<{ className?: 
   { id: "premiadas", label: "Cotas premiadas", icon: Gift },
   { id: "pedidos", label: "Pedidos", icon: ListOrdered },
   { id: "cotas", label: "Cotas", icon: Search },
-  { id: "sorteio", label: "Sorteio final", icon: Trophy },
+  { id: "sorteio", label: "Cota vencedora", icon: Trophy },
 ];
 
 export default function AdminDashboard() {
@@ -58,6 +59,7 @@ function Dashboard() {
   const [stats, setStats] = useState<RaffleStats | null>(null);
   const [prizes, setPrizes] = useState<PrizeWithBuyer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [menuAberto, setMenuAberto] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -97,6 +99,8 @@ function Dashboard() {
     router.refresh();
   }
 
+  const AbaAtual = TABS.find((t) => t.id === tab)?.icon ?? LayoutDashboard;
+
   if (loading || !raffle || !stats) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -106,13 +110,13 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-ink-900">
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-ink-900/85 backdrop-blur">
+    <div className="min-h-screen bg-paper">
+      <header className="sticky top-0 z-40 border-b border-ink/8 bg-paper/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4 lg:px-8">
           <div className="flex items-center gap-3">
             <span className="font-display text-base font-800">
               <span className="text-gradient-gold">ROBERTÃO</span>{" "}
-              <span className="text-white">ADMIN</span>
+              <span className="text-ink">ADMIN</span>
             </span>
           </div>
 
@@ -120,14 +124,14 @@ function Dashboard() {
             <Link
               href="/"
               target="_blank"
-              className="hidden items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs text-white/60 transition-colors hover:border-gold/50 hover:text-gold sm:flex"
+              className="hidden items-center gap-2 rounded-full border border-ink/10 px-4 py-2 text-xs text-ink/65 transition-colors hover:border-gold/50 hover:text-gold sm:flex"
             >
               <ExternalLink className="size-3.5" />
               Ver site
             </Link>
             <button
               onClick={logout}
-              className="flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs text-white/60 transition-colors hover:border-crimson/50 hover:text-crimson cursor-pointer"
+              className="flex items-center gap-2 rounded-full border border-ink/10 px-4 py-2 text-xs text-ink/65 transition-colors hover:border-crimson/50 hover:text-crimson cursor-pointer"
             >
               <LogOut className="size-3.5" />
               Sair
@@ -135,13 +139,65 @@ function Dashboard() {
           </div>
         </div>
 
-        <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-5 pb-3 lg:px-8">
+        {/* celular: menu suspenso com a secao atual */}
+        <div className="px-5 pb-3 lg:hidden">
+          <button
+            onClick={() => setMenuAberto((v) => !v)}
+            aria-expanded={menuAberto}
+            className="flex w-full items-center justify-between gap-3 rounded-xl border border-gold/40 bg-gold/5 px-4 py-3 text-left cursor-pointer"
+          >
+            <span className="flex items-center gap-2.5 text-sm font-semibold text-gold">
+              <AbaAtual className="size-4" />
+              {TABS.find((t) => t.id === tab)?.label}
+            </span>
+            <ChevronDown
+              className={`size-4 shrink-0 text-gold transition-transform ${
+                menuAberto ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          <AnimatePresence initial={false}>
+            {menuAberto && (
+              <motion.nav
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                className="overflow-hidden"
+              >
+                <div className="mt-2 grid gap-1 rounded-xl border border-ink/10 bg-white p-2 shadow-card">
+                  {TABS.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setTab(item.id);
+                        setMenuAberto(false);
+                      }}
+                      className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm transition-colors cursor-pointer ${
+                        tab === item.id
+                          ? "bg-gold/10 font-semibold text-gold"
+                          : "text-ink/70 hover:bg-ink/5 hover:text-ink"
+                      }`}
+                    >
+                      <item.icon className="size-4 shrink-0" />
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </motion.nav>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* telas maiores: barra de abas */}
+        <nav className="mx-auto hidden max-w-6xl gap-1 overflow-x-auto px-5 pb-3 lg:flex lg:px-8">
           {TABS.map((item) => (
             <button
               key={item.id}
               onClick={() => setTab(item.id)}
               className={`relative flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm transition-colors cursor-pointer ${
-                tab === item.id ? "text-gold" : "text-white/50 hover:text-white"
+                tab === item.id ? "text-gold" : "text-ink/55 hover:text-ink"
               }`}
             >
               {tab === item.id && (
@@ -258,14 +314,14 @@ function Overview({
         <Card>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-xl border border-white/15 bg-white/5">
-                <Timer className="size-5 text-white/60" />
+              <div className="flex size-10 items-center justify-center rounded-xl border border-ink/12 bg-ink/5">
+                <Timer className="size-5 text-ink/65" />
               </div>
               <div>
-                <p className="font-display text-sm font-700 text-white">
+                <p className="font-display text-sm font-700 text-ink">
                   {stats.pendingCount} pedido(s) aguardando pagamento
                 </p>
-                <p className="text-xs text-white/45">
+                <p className="text-xs text-ink/50">
                   {formatNumber(stats.reserved)} cota(s) reservadas por até{" "}
                   {raffle.reservationMinutes} min. Os números só são sorteados quando você
                   confirma o pagamento.
@@ -282,7 +338,7 @@ function Overview({
       <Card title="Progresso da rifa" description={raffle.title}>
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-white/55">
+            <span className="text-ink/60">
               {formatNumber(stats.sold)} vendidas · {formatNumber(stats.available)} disponíveis
             </span>
             <span className="font-display text-lg font-800 text-gradient-gold">
@@ -290,21 +346,21 @@ function Overview({
             </span>
           </div>
           <ProgressBar percent={Math.min(stats.soldPercent, 100)} />
-          <div className="flex flex-wrap gap-2 pt-2 text-xs text-white/40">
-            <span className="rounded-full border border-white/10 px-3 py-1">
+          <div className="flex flex-wrap gap-2 pt-2 text-xs text-ink/45">
+            <span className="rounded-full border border-ink/10 px-3 py-1">
               Valor da cota: {formatBRL(raffle.priceCents)}
             </span>
-            <span className="rounded-full border border-white/10 px-3 py-1">
+            <span className="rounded-full border border-ink/10 px-3 py-1">
               Reservadas: {formatNumber(stats.reserved)}
             </span>
-            <span className="rounded-full border border-white/10 px-3 py-1">
+            <span className="rounded-full border border-ink/10 px-3 py-1">
               Livres: {formatNumber(stats.available)}
             </span>
-            <span className="rounded-full border border-white/10 px-3 py-1">
+            <span className="rounded-full border border-ink/10 px-3 py-1">
               Status: {raffle.status}
             </span>
             {raffle.drawDate && (
-              <span className="rounded-full border border-white/10 px-3 py-1">
+              <span className="rounded-full border border-ink/10 px-3 py-1">
                 Sorteio: {raffle.drawDate}
               </span>
             )}
@@ -320,10 +376,10 @@ function Overview({
                 <Gift className="size-5 text-crimson" />
               </div>
               <div>
-                <p className="font-display text-sm font-700 text-white">
+                <p className="font-display text-sm font-700 text-ink">
                   {semNumero} prêmio(s) sem número sorteado
                 </p>
-                <p className="text-xs text-white/45">
+                <p className="text-xs text-ink/50">
                   Eles só entram em jogo depois do sorteio dos números.
                 </p>
               </div>
@@ -339,16 +395,16 @@ function Overview({
         {[
           { id: "cotas" as TabId, icon: Search, title: "Cotas", text: "Buscar titular por número e ver maior/menor cota por período." },
           { id: "pedidos" as TabId, icon: ListOrdered, title: "Pedidos", text: "Lista completa com dados dos compradores." },
-          { id: "sorteio" as TabId, icon: BarChart3, title: "Sorteio final", text: "Sortear o prêmio principal entre as cotas." },
+          { id: "sorteio" as TabId, icon: Trophy, title: "Cota vencedora", text: "Registrar a cota sorteada na Federal e mostrar o ganhador." },
         ].map((item) => (
           <button
             key={item.id}
             onClick={() => onGo(item.id)}
-            className="rounded-2xl border border-white/10 bg-ink-800/50 p-5 text-left transition-colors hover:border-gold/40 cursor-pointer"
+            className="rounded-2xl border border-ink/10 bg-white p-5 text-left transition-colors hover:border-gold/40 cursor-pointer"
           >
             <item.icon className="size-5 text-gold" />
-            <p className="mt-3 font-display text-sm font-700 text-white">{item.title}</p>
-            <p className="mt-1 text-xs text-white/45">{item.text}</p>
+            <p className="mt-3 font-display text-sm font-700 text-ink">{item.title}</p>
+            <p className="mt-1 text-xs text-ink/50">{item.text}</p>
           </button>
         ))}
       </div>

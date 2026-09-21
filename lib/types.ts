@@ -92,7 +92,15 @@ export interface OrderWithNumbers extends Order {
 
 export interface PublicRaffle extends Raffle {
   stats: Pick<RaffleStats, "sold" | "soldPercent">;
-  prizes: { id: number; label: string; valueCents: number; image: string; claimed: boolean }[];
+  prizes: {
+    id: number;
+    label: string;
+    valueCents: number;
+    image: string;
+    /** Null enquanto o numero nao foi sorteado no painel. */
+    number: number | null;
+    claimed: boolean;
+  }[];
 }
 
 /** Dados que o comprador vê na página do pedido, sem expor CPF/e-mail completos. */

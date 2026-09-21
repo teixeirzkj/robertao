@@ -50,18 +50,19 @@ await api("/api/admin/raffle", {
   method: "PATCH",
   body: JSON.stringify({
     title: "R$ 2.000 no Pix",
-    subtitle: "Cotas a R$ 0,25 — concorra a R$ 2.000 e a 4 prêmios de R$ 100.",
+    subtitle: "Cotas a R$ 0,25 — concorra a R$ 2.000 e a 10 prêmios de R$ 100.",
     description:
       "O ganhador leva R$ 2.000 no Pix, na conta, no dia do sorteio.\n\n" +
-      "São 6.250 cotas de R$ 0,25 cada. Além do prêmio principal, 4 cotas " +
-      "escondem R$ 100 no Pix e são pagas na hora em que aparecem para o comprador.\n\n" +
+      "São 6.250 cotas de R$ 0,25 cada. Além do prêmio principal, 10 cotas " +
+      "valem R$ 100 no Pix e são pagas na hora em que aparecem para o comprador.\n\n" +
       "Quanto mais cotas você garantir, maiores as chances.",
     rules:
-      "1. O sorteio do prêmio principal será realizado na data informada.\n" +
+      "1. O sorteio do prêmio principal é feito pela Loteria Federal, na data informada.\n" +
       "2. Cada cota dá direito a um número único, sorteado pelo sistema após a confirmação do pagamento.\n" +
-      "3. As 4 cotas premiadas de R$ 100 são reveladas assim que o pagamento é confirmado.\n" +
-      "4. O ganhador será contatado pelo telefone cadastrado em até 48 horas.\n" +
-      "5. É necessário ter 18 anos ou mais para participar.",
+      "3. As 10 cotas premiadas de R$ 100 são reveladas assim que o pagamento é confirmado.\n" +
+      "4. A cota vencedora e o ganhador são publicados no site logo após o sorteio.\n" +
+      "5. O ganhador será contatado pelo telefone cadastrado em até 48 horas.\n" +
+      "6. É necessário ter 18 anos ou mais para participar.",
     images: ["/placeholders/pix-2000.svg"],
     priceCents: VALOR_COTA,
     totalNumbers: TOTAL_COTAS,
@@ -94,7 +95,8 @@ for (const prize of atuais.prizes) {
   await api(`/api/admin/prizes/${prize.id}`, { method: "DELETE" });
 }
 
-for (let i = 1; i <= 4; i++) {
+const QTD_PREMIOS = 10;
+for (let i = 1; i <= QTD_PREMIOS; i++) {
   await api("/api/admin/prizes", {
     method: "POST",
     body: JSON.stringify({
@@ -110,7 +112,7 @@ const sorteadas = await api("/api/admin/prizes/draw", {
   body: JSON.stringify({ reshuffle: false }),
 });
 const numeros = sorteadas.prizes.filter((p) => !p.orderId).map((p) => p.number);
-console.log(`  4 cotas premiadas de R$ 100 · números secretos: ${numeros.join(", ")}`);
+console.log(`  ${QTD_PREMIOS} cotas premiadas de R$ 100 · cotas: ${numeros.join(", ")}`);
 
 /* ------------------------------------------------------ compras de exemplo */
 

@@ -10,7 +10,7 @@ import { formatBRL, formatDateTimeBR, onlyDigits, padTicket } from "@/lib/utils"
 import type { OrderWithNumbers } from "@/lib/types";
 
 const STATUS: Record<string, { label: string; className: string }> = {
-  pendente: { label: "Aguardando pagamento", className: "border-white/20 text-white/60" },
+  pendente: { label: "Aguardando pagamento", className: "border-ink/15 text-ink/65" },
   pago: { label: "Pagamento confirmado", className: "border-gold/50 text-gold" },
   cancelado: { label: "Cancelado", className: "border-crimson/50 text-crimson" },
 };
@@ -56,15 +56,15 @@ export default function MyNumbers({ totalNumbers }: { totalNumbers: number }) {
     <div className="mx-auto max-w-3xl px-5 pb-16 pt-24 sm:pb-20 sm:pt-32 lg:px-8">
       <Link
         href="/"
-        className="inline-flex items-center gap-2 text-sm text-white/50 transition-colors hover:text-gold"
+        className="inline-flex items-center gap-2 text-sm text-ink/55 transition-colors hover:text-gold"
       >
         <ArrowLeft className="size-4" />
         Voltar para a rifa
       </Link>
 
       <div className="mt-6 space-y-2">
-        <h1 className="font-display text-3xl font-800 text-white sm:text-4xl">Meus números</h1>
-        <p className="text-sm text-white/50">
+        <h1 className="font-display text-3xl font-800 text-ink sm:text-4xl">Meus números</h1>
+        <p className="text-sm text-ink/55">
           Consulte suas cotas pelo CPF, telefone ou código do pedido.
         </p>
       </div>
@@ -110,12 +110,12 @@ export default function MyNumbers({ totalNumbers }: { totalNumbers: number }) {
               return (
                 <div
                   key={order.id}
-                  className="rounded-3xl border border-white/10 bg-ink-800/50 p-5 sm:p-6"
+                  className="rounded-3xl border border-ink/10 bg-white p-5 sm:p-6"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <p className="font-display text-lg font-700 text-white">{order.name}</p>
-                      <p className="text-xs text-white/40">
+                      <p className="font-display text-lg font-700 text-ink">{order.name}</p>
+                      <p className="text-xs text-ink/45">
                         Pedido {order.code} · {formatDateTimeBR(order.createdAt)}
                       </p>
                     </div>
@@ -138,7 +138,7 @@ export default function MyNumbers({ totalNumbers }: { totalNumbers: number }) {
                             <p className="font-display text-sm font-700 text-gold">
                               Cota premiada: {prize.label}
                             </p>
-                            <p className="text-xs text-white/50">
+                            <p className="text-xs text-ink/55">
                               Número {padTicket(prize.number, totalNumbers)}
                             </p>
                           </div>
@@ -148,7 +148,7 @@ export default function MyNumbers({ totalNumbers }: { totalNumbers: number }) {
                   )}
 
                   <div className="mt-5">
-                    <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-[0.15em] text-white/40">
+                    <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-[0.15em] text-ink/45">
                       <span className="inline-flex items-center gap-1.5">
                         <Ticket className="size-3.5" />
                         {order.quantity} cota(s)
@@ -157,9 +157,9 @@ export default function MyNumbers({ totalNumbers }: { totalNumbers: number }) {
                     </div>
 
                     {order.numbers.length === 0 ? (
-                      <div className="rounded-2xl border border-dashed border-white/15 bg-ink-900/40 px-4 py-5 text-center">
-                        <Clock className="mx-auto size-6 text-white/30" />
-                        <p className="mt-2 text-sm text-white/60">
+                      <div className="rounded-2xl border border-dashed border-ink/12 bg-paper-50 px-4 py-5 text-center">
+                        <Clock className="mx-auto size-6 text-ink/35" />
+                        <p className="mt-2 text-sm text-ink/65">
                           {order.status === "cancelado"
                             ? "Pedido cancelado — as cotas voltaram para a rifa."
                             : "Seus números são sorteados quando o pagamento for confirmado."}
@@ -183,7 +183,7 @@ export default function MyNumbers({ totalNumbers }: { totalNumbers: number }) {
                             className={
                               isPrize
                                 ? "rounded-lg bg-gold-metal bg-[length:200%_auto] px-2.5 py-1.5 font-mono text-xs font-bold text-ink-900"
-                                : "rounded-lg border border-white/10 bg-ink-700 px-2.5 py-1.5 font-mono text-xs text-white/75"
+                                : "rounded-lg border border-ink/10 bg-paper-100 px-2.5 py-1.5 font-mono text-xs text-ink/75"
                             }
                           >
                             {padTicket(n, totalNumbers)}

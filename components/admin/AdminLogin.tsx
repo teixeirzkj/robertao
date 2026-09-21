@@ -36,27 +36,27 @@ export default function AdminLogin() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-ink-radial px-5">
+    <main className="flex min-h-screen items-center justify-center bg-paper-radial px-5">
       <motion.form
         onSubmit={submit}
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-sm rounded-3xl border border-white/10 bg-ink-800/70 p-8 backdrop-blur"
+        className="w-full max-w-sm rounded-3xl border border-ink/10 bg-white p-8 backdrop-blur"
       >
         <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-gold/30 bg-gold/10">
           <LockKeyhole className="size-6 text-gold" />
         </div>
 
-        <h1 className="mt-5 text-center font-display text-xl font-800 text-white">
+        <h1 className="mt-5 text-center font-display text-xl font-800 text-ink">
           Painel administrativo
         </h1>
-        <p className="mt-1 text-center text-sm text-white/45">Robertão Rifas</p>
+        <p className="mt-1 text-center text-sm text-ink/50">Robertão Rifas</p>
 
         <div className="mt-7 space-y-1.5">
           <label
             htmlFor="senha"
-            className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-white/45"
+            className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/50"
           >
             Senha de acesso
           </label>
@@ -68,7 +68,7 @@ export default function AdminLogin() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            className="w-full rounded-xl border border-white/10 bg-ink-900/70 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-white/25 focus:border-gold/60"
+            className="w-full rounded-xl border border-ink/10 bg-paper-50 px-4 py-3 text-sm text-ink outline-none transition-colors placeholder:text-ink/30 focus:border-gold/60"
           />
         </div>
 

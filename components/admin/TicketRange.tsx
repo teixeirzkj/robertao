@@ -129,7 +129,7 @@ export default function TicketRange({
                 key={atalho.label}
                 type="button"
                 onClick={() => aplicarAtalho(atalho)}
-                className="rounded-full border border-white/10 px-4 py-1.5 text-xs text-white/55 transition-colors hover:border-gold/50 hover:text-gold cursor-pointer"
+                className="rounded-full border border-ink/10 px-4 py-1.5 text-xs text-ink/60 transition-colors hover:border-gold/50 hover:text-gold cursor-pointer"
               >
                 {atalho.label}
               </button>
@@ -150,22 +150,22 @@ export default function TicketRange({
           >
             <Card>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-                <span className="flex items-center gap-2 text-white/50">
+                <span className="flex items-center gap-2 text-ink/55">
                   <CalendarClock className="size-4 text-gold" />
                   {range.from ? formatDateTimeBR(range.from) : "início da rifa"}
                   {" → "}
                   {range.to ? formatDateTimeBR(range.to) : "agora"}
                 </span>
-                <span className="text-white/45">
-                  <strong className="text-white">{formatNumber(range.count)}</strong> cota(s)
+                <span className="text-ink/50">
+                  <strong className="text-ink">{formatNumber(range.count)}</strong> cota(s)
                 </span>
-                <span className="text-white/45">
-                  <strong className="text-white">{range.ordersCount}</strong> pedido(s)
+                <span className="text-ink/50">
+                  <strong className="text-ink">{range.ordersCount}</strong> pedido(s)
                 </span>
-                <span className="text-white/45">
-                  cota a <strong className="text-white">{formatBRL(priceCents)}</strong>
+                <span className="text-ink/50">
+                  cota a <strong className="text-ink">{formatBRL(priceCents)}</strong>
                 </span>
-                <span className="text-white/45">
+                <span className="text-ink/50">
                   total <strong className="text-gold">{formatBRL(range.revenueCents)}</strong>
                 </span>
               </div>
@@ -174,8 +174,8 @@ export default function TicketRange({
             {range.count === 0 ? (
               <Card>
                 <div className="py-10 text-center">
-                  <Ticket className="mx-auto size-8 text-white/20" />
-                  <p className="mt-3 text-sm text-white/40">
+                  <Ticket className="mx-auto size-8 text-ink/25" />
+                  <p className="mt-3 text-sm text-ink/45">
                     Nenhuma cota foi vendida nesse período.
                   </p>
                 </div>
@@ -226,8 +226,8 @@ function Edge({
   return (
     <Card className={destaque ? "border-gold/30 bg-gold/5" : undefined}>
       <div className="flex items-center gap-2">
-        <Icone className={destaque ? "size-4 text-gold" : "size-4 text-white/40"} />
-        <h3 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/45">
+        <Icone className={destaque ? "size-4 text-gold" : "size-4 text-ink/45"} />
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-ink/50">
           {titulo}
         </h3>
       </div>
@@ -236,12 +236,12 @@ function Edge({
         className={
           destaque
             ? "mt-3 font-mono text-3xl font-bold text-gradient-gold sm:text-4xl"
-            : "mt-3 font-mono text-3xl font-bold text-white sm:text-4xl"
+            : "mt-3 font-mono text-3xl font-bold text-ink sm:text-4xl"
         }
       >
         {padTicket(edge.number, totalNumbers)}
       </p>
-      <p className="mt-1 text-xs text-white/35">
+      <p className="mt-1 text-xs text-ink/40">
         vendida em {formatDateTimeBR(edge.soldAt)}
       </p>
 
@@ -255,12 +255,12 @@ function Edge({
         />
       </div>
 
-      <div className="mt-2 space-y-1 rounded-xl border border-white/10 bg-ink-900/50 px-4 py-3">
-        <p className="font-display text-sm font-700 text-white">{edge.order.name}</p>
-        <p className="text-xs text-white/50">
+      <div className="mt-2 space-y-1 rounded-xl border border-ink/10 bg-paper-50 px-4 py-3">
+        <p className="font-display text-sm font-700 text-ink">{edge.order.name}</p>
+        <p className="text-xs text-ink/55">
           {edge.order.phone} · {edge.order.cpf}
         </p>
-        <p className="text-xs text-white/35">
+        <p className="text-xs text-ink/40">
           Pedido {edge.order.code} ·{" "}
           {edge.order.status === "pago" ? "pago" : edge.order.status}
         </p>
@@ -297,15 +297,15 @@ function Dado({
   destaque?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-ink-900/50 px-3 py-2.5">
-      <span className="block text-[10px] uppercase tracking-[0.12em] text-white/35">
+    <div className="rounded-xl border border-ink/10 bg-paper-50 px-3 py-2.5">
+      <span className="block text-[10px] uppercase tracking-[0.12em] text-ink/40">
         {rotulo}
       </span>
       <p
         className={
           destaque
             ? "mt-0.5 font-display text-sm font-700 text-gold"
-            : "mt-0.5 font-display text-sm font-700 text-white"
+            : "mt-0.5 font-display text-sm font-700 text-ink"
         }
       >
         {valor}

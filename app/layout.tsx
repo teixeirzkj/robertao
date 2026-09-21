@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR" className={`${sora.variable} ${inter.variable}`}>
-      <body className="bg-ink-900 font-body text-white noise-overlay">{children}</body>
+      <body className="bg-paper font-body text-ink noise-overlay">{children}</body>
     </html>
   );
 }

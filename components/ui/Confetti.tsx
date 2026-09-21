@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 
-const COLORS = ["#d4af37", "#ffd875", "#f4e2a8", "#ffffff", "#e8384f"];
+const COLORS = ["#c9a227", "#8a6b1c", "#e8c55a", "#a8202f", "#1c1813"];
 
 /** Chuva de confete leve, puramente decorativa. */
 export default function Confetti({ pieces = 70 }: { pieces?: number }) {

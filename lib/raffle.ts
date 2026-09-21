@@ -182,7 +182,7 @@ export async function getPublicRaffle(): Promise<PublicRaffle> {
     getRaffle(),
     getStats(),
     query<Row>(
-      "SELECT id, label, value_cents, image, order_id FROM prizes ORDER BY value_cents DESC, id ASC"
+      "SELECT id, label, value_cents, image, number, order_id FROM prizes ORDER BY value_cents DESC, id ASC"
     ),
   ]);
   return {
@@ -194,6 +194,7 @@ export async function getPublicRaffle(): Promise<PublicRaffle> {
       label: p.label,
       valueCents: p.value_cents,
       image: p.image ?? "",
+      number: p.number ?? null,
       claimed: Boolean(p.order_id),
     })),
   };
@@ -898,28 +899,50 @@ export interface GrandDraw {
   order: Order;
 }
 
-export async function drawGrandPrize(force = false): Promise<GrandDraw> {
+/**
+ * Registra a cota vencedora do prêmio principal.
+ *
+ * O sorteio é feito fora do sistema (Loteria Federal); aqui o admin apenas
+ * informa o número sorteado e a rifa passa a mostrar o titular daquela cota
+ * como ganhador.
+ */
+export async function setWinnerTicket(number: number, force = false): Promise<GrandDraw> {
   return transaction(async (client) => {
     await client.query("SELECT pg_advisory_xact_lock($1)", [TICKET_LOCK]);
+
     const raffleRes = await client.query("SELECT * FROM raffle WHERE id = 1");
-    if (raffleRes.rows[0].winner_number && !force) {
-      throw new RaffleError("O sorteio final ja foi realizado. Use 'refazer' para sortear de novo.");
+    const total: number = raffleRes.rows[0].total_numbers;
+
+    if (!Number.isInteger(number) || number < 1 || number > total) {
+      throw new RaffleError("Informe uma cota entre 1 e " + total + ".");
     }
-    const pick = await client.query<{ number: number; order_id: string }>(
-      `SELECT t.number, t.order_id FROM tickets t
-       JOIN orders o ON o.id = t.order_id
-       WHERE o.status = 'pago'
-       ORDER BY random() LIMIT 1`
+    if (raffleRes.rows[0].winner_number && !force) {
+      throw new RaffleError(
+        "Ja existe uma cota vencedora registrada. Confirme a troca para substituir."
+      );
+    }
+
+    const found = await client.query<Row>(
+      `SELECT o.* FROM tickets t JOIN orders o ON o.id = t.order_id WHERE t.number = $1`,
+      [number]
     );
-    if (!pick.rows.length) throw new RaffleError("Nenhuma cota paga para sortear.");
+    if (!found.rows.length) {
+      throw new RaffleError(
+        "A cota " + number + " nao foi vendida — nao ha titular para essa cota.",
+        404
+      );
+    }
+    if (found.rows[0].status === "cancelado") {
+      throw new RaffleError("A cota " + number + " pertence a um pedido cancelado.", 409);
+    }
 
     await client.query(
       `UPDATE raffle SET winner_number = $1, winner_order_id = $2, drawn_at = now(), status = 'encerrada'
        WHERE id = 1`,
-      [pick.rows[0].number, pick.rows[0].order_id]
+      [number, found.rows[0].id]
     );
-    const order = await client.query("SELECT * FROM orders WHERE id = $1", [pick.rows[0].order_id]);
-    return { number: pick.rows[0].number, order: mapOrder(order.rows[0]) };
+
+    return { number, order: mapOrder(found.rows[0]) };
   });
 }
 

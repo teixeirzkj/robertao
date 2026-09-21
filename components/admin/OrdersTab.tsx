@@ -119,7 +119,7 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
       <Card title="Pedidos" description="Todas as compras, com os números adquiridos.">
         <div className="space-y-4">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/30" />
+            <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-ink/35" />
             <input
               value={search}
               onChange={(e) => {
@@ -127,7 +127,7 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
                 setSearch(e.target.value);
               }}
               placeholder="Buscar por nome, CPF, telefone, e-mail, código ou número da cota"
-              className="w-full rounded-xl border border-white/10 bg-ink-900/70 py-3 pl-11 pr-4 text-sm text-white outline-none transition-colors placeholder:text-white/25 focus:border-gold/60"
+              className="w-full rounded-xl border border-ink/10 bg-paper-50 py-3 pl-11 pr-4 text-sm text-ink outline-none transition-colors placeholder:text-ink/30 focus:border-gold/60"
             />
           </div>
 
@@ -142,13 +142,13 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
                 className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
                   status === tab.value
                     ? "border-gold/60 bg-gold/10 text-gold"
-                    : "border-white/10 text-white/50 hover:border-white/25"
+                    : "border-ink/10 text-ink/55 hover:border-ink/20"
                 }`}
               >
                 {tab.label}
               </button>
             ))}
-            <span className="ml-auto self-center text-xs text-white/35">
+            <span className="ml-auto self-center text-xs text-ink/40">
               {total} resultado(s)
             </span>
           </div>
@@ -160,9 +160,9 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
           <Loader2 className="size-6 animate-spin text-gold" />
         </div>
       ) : orders.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/10 py-16 text-center">
-          <User className="mx-auto size-8 text-white/20" />
-          <p className="mt-3 text-sm text-white/40">Nenhum pedido encontrado.</p>
+        <div className="rounded-2xl border border-dashed border-ink/10 py-16 text-center">
+          <User className="mx-auto size-8 text-ink/25" />
+          <p className="mt-3 text-sm text-ink/45">Nenhum pedido encontrado.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -172,7 +172,7 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
               layout
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="overflow-hidden rounded-2xl border border-white/10 bg-ink-800/50"
+              className="overflow-hidden rounded-2xl border border-ink/10 bg-white"
             >
               <button
                 onClick={() => setExpanded(expanded === order.id ? null : order.id)}
@@ -180,7 +180,7 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-display text-base font-700 text-white">{order.name}</p>
+                    <p className="font-display text-base font-700 text-ink">{order.name}</p>
                     {order.prizes.length > 0 && (
                       <Badge tone="ouro">
                         <Gift className="size-3" />
@@ -188,7 +188,7 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
                       </Badge>
                     )}
                   </div>
-                  <p className="mt-0.5 text-xs text-white/40">
+                  <p className="mt-0.5 text-xs text-ink/45">
                     {order.code} · {order.quantity} cota(s) · {formatBRL(order.totalCents)} ·{" "}
                     {formatDateTimeBR(order.createdAt)}
                   </p>
@@ -199,7 +199,7 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
                   {order.status === "pendente" && <Badge>Pendente</Badge>}
                   {order.status === "cancelado" && <Badge tone="erro">Cancelado</Badge>}
                   <ChevronDown
-                    className={`size-4 text-white/35 transition-transform ${
+                    className={`size-4 text-ink/40 transition-transform ${
                       expanded === order.id ? "rotate-180" : ""
                     }`}
                   />
@@ -213,7 +213,7 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                    className="overflow-hidden border-t border-white/5"
+                    className="overflow-hidden border-t border-ink/8"
                   >
                     <div className="space-y-5 p-5">
                       <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
@@ -238,7 +238,7 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
                               <span className="text-sm font-semibold text-gold">
                                 {prize.label}
                               </span>
-                              <span className="ml-auto font-mono text-xs text-white/60">
+                              <span className="ml-auto font-mono text-xs text-ink/65">
                                 {padTicket(prize.number, totalNumbers)}
                               </span>
                             </div>
@@ -247,11 +247,11 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
                       )}
 
                       <div>
-                        <p className="mb-2 text-[11px] uppercase tracking-[0.15em] text-white/40">
+                        <p className="mb-2 text-[11px] uppercase tracking-[0.15em] text-ink/45">
                           Cotas adquiridas ({order.numbers.length})
                         </p>
                         {order.numbers.length === 0 && (
-                          <div className="rounded-xl border border-dashed border-white/15 bg-ink-900/40 px-4 py-4 text-center text-sm text-white/50">
+                          <div className="rounded-xl border border-dashed border-ink/12 bg-paper-50 px-4 py-4 text-center text-sm text-ink/55">
                             {order.status === "pendente"
                               ? `${order.quantity} cota(s) reservadas. Os números são sorteados quando você confirmar o pagamento.`
                               : "Nenhuma cota vinculada — o pedido foi cancelado."}
@@ -266,7 +266,7 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
                                 className={
                                   isPrize
                                     ? "rounded-lg bg-gold-metal bg-[length:200%_auto] px-2.5 py-1.5 font-mono text-xs font-bold text-ink-900"
-                                    : "rounded-lg border border-white/10 bg-ink-700 px-2.5 py-1.5 font-mono text-xs text-white/75"
+                                    : "rounded-lg border border-ink/10 bg-paper-100 px-2.5 py-1.5 font-mono text-xs text-ink/75"
                                 }
                               >
                                 {padTicket(n, totalNumbers)}
@@ -350,7 +350,7 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
           >
             Anterior
           </Button>
-          <span className="text-xs text-white/40">
+          <span className="text-xs text-ink/45">
             Página {page + 1} de {pages}
           </span>
           <Button
