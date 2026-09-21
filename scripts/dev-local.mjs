@@ -22,7 +22,13 @@ const next = spawn(
   ["next", "dev", "-p", port],
   {
     stdio: "inherit",
-    env: { ...process.env, DATABASE_URL: db.url },
+    env: {
+      ...process.env,
+      DATABASE_URL: db.url,
+      // O banco embutido serve todas as conexoes na mesma sessao Postgres;
+      // uma conexao so mantem as transacoes em fila. Ver lib/db.ts.
+      DEV_SINGLE_CONNECTION: "1",
+    },
     shell: process.platform === "win32",
   }
 );

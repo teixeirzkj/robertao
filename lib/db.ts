@@ -32,7 +32,15 @@ export function getPool(): Pool {
     const url = connectionString();
     global.__rifaPool = new Pool({
       connectionString: url,
-      max: 3,
+      /**
+       * O banco embutido de desenvolvimento (`npm run dev:local`) roda o
+       * Postgres em modo single-user: todas as conexoes caem na MESMA sessao,
+       * onde `pg_advisory_xact_lock` nao isola nada e dois BEGIN/COMMIT
+       * simultaneos se intercalam. Com uma conexao so, as transacoes ficam em
+       * fila e o comportamento bate com o de um Postgres de verdade.
+       * Em producao cada conexao e uma sessao propria, entao usamos o pool.
+       */
+      max: process.env.DEV_SINGLE_CONNECTION === "1" ? 1 : 3,
       idleTimeoutMillis: 10_000,
       connectionTimeoutMillis: 15_000,
       ssl: /localhost|127\.0\.0\.1/.test(url)

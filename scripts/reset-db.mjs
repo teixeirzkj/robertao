@@ -1,26 +1,34 @@
 /**
- * `npm run reset`
+ * `npm run reset -- --sim`
  *
- * Apaga o banco local de desenvolvimento (.pgdata/). As tabelas são recriadas
- * vazias na próxima vez que o site consultar o banco.
+ * Apaga o banco local de desenvolvimento. As tabelas sao recriadas vazias na
+ * proxima vez que o site consultar o banco.
  *
- * Só afeta o ambiente local — não toca no banco de producao.
+ * So afeta o ambiente local — nao toca no banco de producao.
  */
 import fs from "node:fs";
 import path from "node:path";
+import { resolverDataDir } from "./dev-db.mjs";
 
-const dir = path.resolve(process.cwd(), ".pgdata");
+const dir = resolverDataDir();
+// A pasta antiga dentro do projeto tambem e limpa, se existir.
+const antiga = path.join(process.cwd(), ".pgdata");
+const alvos = [...new Set([dir, antiga])].filter((d) => fs.existsSync(d));
 
-if (!fs.existsSync(dir)) {
-  console.log("Nada para apagar: .pgdata/ nao existe.");
+if (!alvos.length) {
+  console.log(`Nada para apagar. O banco local ficaria em:\n  ${dir}`);
   process.exit(0);
 }
 
 if (!process.argv.includes("--sim") && !process.argv.includes("-y")) {
-  console.log("Isto apaga TODOS os pedidos, cotas e premios do banco local.");
-  console.log("Para confirmar, rode:  npm run reset -- --sim");
+  console.log("Isto apaga TODOS os pedidos, cotas e premios do banco local:");
+  for (const d of alvos) console.log(`  ${d}`);
+  console.log("\nPara confirmar, rode:  npm run reset -- --sim");
   process.exit(1);
 }
 
-fs.rmSync(dir, { recursive: true, force: true });
-console.log("Banco local apagado. Suba o site (npm run dev:local) e rode `npm run seed`.");
+for (const d of alvos) {
+  fs.rmSync(d, { recursive: true, force: true });
+  console.log(`apagado: ${d}`);
+}
+console.log("\nSuba o site (npm run dev:local) e rode `npm run seed`.");

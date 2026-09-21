@@ -101,8 +101,19 @@ npm run dev:local     # sobe o banco local + o site em http://localhost:3000
 npm run seed          # (opcional, em outro terminal) preenche com dados de exemplo
 ```
 
-Os dados ficam em `.pgdata/` e continuam lá entre reinícios. A senha padrão do
-painel é `robertao123` — defina `ADMIN_PASSWORD` para trocar.
+Os dados persistem entre reinícios. A senha padrão do painel é `robertao123`
+— defina `ADMIN_PASSWORD` para trocar.
+
+O banco de desenvolvimento tem duas limitações que **não** valem para produção:
+
+- Ele roda o Postgres em modo single-user, com todas as conexões na mesma
+  sessão. Por isso o `dev:local` limita o pool a uma conexão, mantendo as
+  transações em fila. Num Postgres de verdade cada conexão é uma sessão e o
+  *advisory lock* faz esse trabalho.
+- Em pastas sincronizadas (OneDrive e cia.), os dados vão para o temp do
+  sistema em vez da pasta do projeto — o sync mexe nos arquivos enquanto o
+  Postgres os usa e **corrompe o banco**. Use `DEV_DB_DIR` para escolher
+  outro lugar.
 
 **Com um Postgres próprio** (nuvem ou local):
 
