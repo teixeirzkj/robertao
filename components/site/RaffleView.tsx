@@ -92,7 +92,7 @@ export default function RaffleView({
         {/* barra "meus números" */}
         <Link
           href="/meus-numeros"
-          className="mt-2 flex items-center justify-center gap-2 rounded-xl border border-ink/10 bg-white py-3 text-sm font-semibold text-ink transition-colors hover:border-gold/50 hover:text-gold"
+          className="mt-2 flex items-center justify-center gap-2 rounded-xl border border-ink/10 bg-paper-100 py-3 text-sm font-semibold text-ink transition-colors hover:border-gold/50 hover:text-gold"
         >
           <Search className="size-4 text-gold" />
           Meus números
@@ -111,7 +111,7 @@ export default function RaffleView({
           <MenorEMaiorTitulo totalNumbers={raffle.totalNumbers} />
           <a
             href="#premiadas"
-            className="flex items-center justify-center gap-2 rounded-xl border border-ink/10 bg-white py-3 text-sm font-semibold text-ink transition-colors hover:border-gold/50 hover:text-gold"
+            className="flex items-center justify-center gap-2 rounded-xl border border-ink/10 bg-paper-100 py-3 text-sm font-semibold text-ink transition-colors hover:border-gold/50 hover:text-gold"
           >
             <Trophy className="size-4 text-gold" />
             Prêmios
@@ -137,7 +137,7 @@ export default function RaffleView({
         {/* ------------------------------------------------------- compra */}
         <div className="mt-5">
           {closed ? (
-            <div className="rounded-2xl border border-ink/10 bg-white p-6 text-center">
+            <div className="rounded-2xl border border-ink/10 bg-paper-100 p-6 text-center">
               <Lock className="mx-auto size-7 text-ink/45" />
               <p className="mt-3 font-display text-lg font-700 text-ink">
                 {soldOut ? "Todas as cotas foram vendidas" : "Vendas indisponíveis"}
@@ -171,7 +171,7 @@ export default function RaffleView({
 
               <a
                 href="#regulamento"
-                className="mt-2 flex items-center justify-center gap-2 rounded-xl border border-ink/10 bg-white py-3 text-sm font-semibold text-ink transition-colors hover:border-gold/50 hover:text-gold"
+                className="mt-2 flex items-center justify-center gap-2 rounded-xl border border-ink/10 bg-paper-100 py-3 text-sm font-semibold text-ink transition-colors hover:border-gold/50 hover:text-gold"
               >
                 <FileText className="size-4 text-gold" />
                 Descrição / Regulamento
@@ -210,7 +210,7 @@ export default function RaffleView({
         {raffle.prizes.length > 0 && (
           <section id="premiadas" className="mt-6 scroll-mt-24">
             <Reveal>
-              <div className="overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-card">
+              <div className="overflow-hidden rounded-2xl border border-ink/10 bg-paper-100 shadow-card">
                 <div className="flex items-center justify-between gap-3 border-b border-ink/8 bg-paper-50 px-4 py-3">
                   <span className="flex items-center gap-2 font-display text-sm font-700 text-ink">
                     <Trophy className="size-4 text-gold" />
@@ -234,7 +234,7 @@ export default function RaffleView({
                         className={cn(
                           "shrink-0 rounded-lg px-2.5 py-1.5 font-mono text-[13px] font-bold tabular-nums sm:text-sm",
                           prize.claimed
-                            ? "border border-gold/50 bg-white text-gold"
+                            ? "border border-gold/50 bg-paper-100 text-gold"
                             : "bg-paper-200 text-ink/70"
                         )}
                       >
@@ -324,7 +324,7 @@ export default function RaffleView({
               },
             ].map((item, i) => (
               <Reveal key={item.title} delay={i * 0.07}>
-                <div className="h-full rounded-2xl border border-ink/10 bg-white p-4 transition-colors duration-300 hover:border-gold/40 sm:p-6">
+                <div className="h-full rounded-2xl border border-ink/10 bg-paper-100 p-4 transition-colors duration-300 hover:border-gold/40 sm:p-6">
                   <div className="flex size-10 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 sm:size-11">
                     <item.icon className="size-5 text-gold" />
                   </div>
@@ -347,7 +347,7 @@ export default function RaffleView({
           <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-2">
             {raffle.description && (
               <Reveal>
-                <article className="h-full rounded-2xl border border-ink/10 bg-white p-5 sm:p-7">
+                <article className="h-full rounded-2xl border border-ink/10 bg-paper-100 p-5 sm:p-7">
                   <h3 className="font-display text-lg font-700 text-ink">Sobre o prêmio</h3>
                   <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-ink/65">
                     {raffle.description}
@@ -357,7 +357,7 @@ export default function RaffleView({
             )}
             {raffle.rules && (
               <Reveal delay={0.08}>
-                <article className="h-full rounded-2xl border border-ink/10 bg-white p-5 sm:p-7">
+                <article className="h-full rounded-2xl border border-ink/10 bg-paper-100 p-5 sm:p-7">
                   <h3 className="font-display text-lg font-700 text-ink">Regulamento</h3>
                   <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-ink/65">
                     {raffle.rules}
@@ -406,7 +406,7 @@ function MenorEMaiorTitulo({ totalNumbers }: { totalNumbers: number }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-ink/10 bg-white">
+    <div className="overflow-hidden rounded-xl border border-ink/10 bg-paper-100">
       <button
         onClick={alternar}
         aria-expanded={aberto}

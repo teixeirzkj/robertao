@@ -42,7 +42,7 @@ export default function AdminLogin() {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-sm rounded-3xl border border-ink/10 bg-white p-8 backdrop-blur"
+        className="w-full max-w-sm rounded-3xl border border-ink/10 bg-paper-100 p-8 backdrop-blur"
       >
         <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-gold/30 bg-gold/10">
           <LockKeyhole className="size-6 text-gold" />

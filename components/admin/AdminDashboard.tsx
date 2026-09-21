@@ -166,7 +166,7 @@ function Dashboard() {
                 transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                 className="overflow-hidden"
               >
-                <div className="mt-2 grid gap-1 rounded-xl border border-ink/10 bg-white p-2 shadow-card">
+                <div className="mt-2 grid gap-1 rounded-xl border border-ink/10 bg-paper-100 p-2 shadow-card">
                   {TABS.map((item) => (
                     <button
                       key={item.id}
@@ -400,7 +400,7 @@ function Overview({
           <button
             key={item.id}
             onClick={() => onGo(item.id)}
-            className="rounded-2xl border border-ink/10 bg-white p-5 text-left transition-colors hover:border-gold/40 cursor-pointer"
+            className="rounded-2xl border border-ink/10 bg-paper-100 p-5 text-left transition-colors hover:border-gold/40 cursor-pointer"
           >
             <item.icon className="size-5 text-gold" />
             <p className="mt-3 font-display text-sm font-700 text-ink">{item.title}</p>

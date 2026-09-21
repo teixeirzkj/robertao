@@ -41,8 +41,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               className={cn(
                 "pointer-events-auto flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm backdrop-blur",
                 t.kind === "ok"
-                  ? "border-gold/40 bg-white text-ink"
-                  : "border-crimson/50 bg-white text-crimson"
+                  ? "border-gold/40 bg-paper-100 text-ink"
+                  : "border-crimson/50 bg-paper-100 text-crimson"
               )}
             >
               {t.kind === "ok" ? (
@@ -76,7 +76,7 @@ export function Card({
 }) {
   return (
     <section
-      className={cn("rounded-2xl border border-ink/10 bg-white p-4 sm:p-6", className)}
+      className={cn("rounded-2xl border border-ink/10 bg-paper-100 p-4 sm:p-6", className)}
     >
       {(title || action) && (
         <header className="mb-4 flex flex-wrap items-start justify-between gap-3 sm:mb-5">
@@ -112,7 +112,7 @@ export function StatCard({
       transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
         "rounded-2xl border p-4 sm:p-5",
-        accent ? "border-gold/30 bg-gold/5" : "border-ink/10 bg-white"
+        accent ? "border-gold/30 bg-gold/5" : "border-ink/10 bg-paper-100"
       )}
     >
       <div className="flex items-center justify-between">

@@ -122,7 +122,7 @@ export default function CheckoutModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/40 backdrop-blur-sm sm:items-center sm:p-6"
+          className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center sm:p-6"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget && !sending) close();
           }}
@@ -230,7 +230,7 @@ export default function CheckoutModal({
                 )}
               </AnimatePresence>
 
-              <div className="flex items-start gap-2.5 rounded-xl border border-ink/10 bg-white px-4 py-3">
+              <div className="flex items-start gap-2.5 rounded-xl border border-ink/10 bg-paper-100 px-4 py-3">
                 <Lock className="mt-0.5 size-4 shrink-0 text-gold" />
                 <p className="text-[11px] leading-relaxed text-ink/55">
                   Seus números são sorteados <strong className="text-ink/75">após a

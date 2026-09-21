@@ -110,7 +110,7 @@ export default function MyNumbers({ totalNumbers }: { totalNumbers: number }) {
               return (
                 <div
                   key={order.id}
-                  className="rounded-3xl border border-ink/10 bg-white p-5 sm:p-6"
+                  className="rounded-3xl border border-ink/10 bg-paper-100 p-5 sm:p-6"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>

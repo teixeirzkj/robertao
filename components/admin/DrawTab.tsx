@@ -242,7 +242,7 @@ export default function DrawTab({
               className="mt-5 space-y-4"
             >
               <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-gold/30 bg-gold/5 p-4">
-                <span className="rounded-xl border border-gold/40 bg-white px-4 py-2 font-mono text-2xl font-bold text-gradient-gold">
+                <span className="rounded-xl border border-gold/40 bg-paper-100 px-4 py-2 font-mono text-2xl font-bold text-gradient-gold">
                   {padTicket(busca.number, raffle.totalNumbers)}
                 </span>
                 {busca.order ? (

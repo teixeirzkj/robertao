@@ -4,7 +4,7 @@ import { Database } from "lucide-react";
 export default function SetupNotice({ message }: { message: string }) {
   return (
     <main className="flex min-h-screen items-center justify-center px-5">
-      <div className="w-full max-w-lg rounded-3xl border border-ink/10 bg-white p-8 text-center">
+      <div className="w-full max-w-lg rounded-3xl border border-ink/10 bg-paper-100 p-8 text-center">
         <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-gold/30 bg-gold/10">
           <Database className="size-6 text-gold" />
         </div>

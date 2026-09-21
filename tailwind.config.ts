@@ -5,37 +5,40 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        /** Superfícies claras: página, cartões, campos e trilhas. */
+        /**
+         * Superfícies, do fundo da página para cima. As cores vêm do print de
+         * referência: página #141c24, cartão #212b36, traços #44505c.
+         */
         paper: {
-          DEFAULT: "#f7f5f0",
-          50: "#fdfcfa",
-          100: "#f2efe7",
-          200: "#e8e3d6",
-          300: "#dcd5c4",
-        },
-        /** Texto e traços escuros. Usado com opacidade: text-ink/60 etc. */
-        ink: {
-          DEFAULT: "#1c1813",
-          900: "#1c1813",
-          800: "#2a251d",
-          700: "#3c352b",
-          600: "#5a5245",
-          500: "#736a5b",
+          DEFAULT: "#141c24",
+          50: "#1a2230",
+          100: "#212b36",
+          200: "#2b3644",
+          300: "#3a4655",
         },
         /**
-         * Dourado calibrado para fundo claro: o DEFAULT passa contraste AA
-         * como texto; `light`/`bright` servem para preenchimentos e brilhos.
+         * Texto e traços claros. Usado com opacidade (text-ink/60).
+         * `ink-900` é o oposto — texto escuro sobre o dourado.
          */
+        ink: {
+          DEFAULT: "#f2f5f8",
+          900: "#141c24",
+          800: "#1a2230",
+          700: "#2b3644",
+          600: "#5a6675",
+          500: "#909ca8",
+        },
+        /** Dourado calibrado para fundo escuro. */
         gold: {
-          DEFAULT: "#8a6b1c",
-          dim: "#6d5416",
-          light: "#c9a227",
-          bright: "#e8c55a",
-          pale: "#f4e8c4",
+          DEFAULT: "#e2b83c",
+          dim: "#b8901f",
+          light: "#f0d97a",
+          bright: "#ffe9a8",
+          pale: "#4a3d18",
         },
         crimson: {
-          DEFAULT: "#a8202f",
-          dim: "#7d1622",
+          DEFAULT: "#ff5a68",
+          dim: "#c22c3a",
         },
       },
       fontFamily: {
@@ -48,17 +51,17 @@ const config: Config = {
       },
       backgroundImage: {
         "gold-metal":
-          "linear-gradient(135deg, #a3812a 0%, #f0d97a 25%, #d4af37 50%, #f6e6a8 65%, #a3812a 100%)",
+          "linear-gradient(135deg, #b8901f 0%, #f0d97a 25%, #e2b83c 50%, #ffe9a8 65%, #b8901f 100%)",
         "paper-radial":
-          "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(201,162,39,0.18), transparent), radial-gradient(ellipse 60% 50% at 90% 10%, rgba(168,32,47,0.05), transparent)",
+          "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(226,184,60,0.16), transparent), radial-gradient(ellipse 60% 50% at 90% 10%, rgba(255,90,104,0.06), transparent)",
         noise: "url('/noise.png')",
       },
       boxShadow: {
-        gold: "0 0 0 1px rgba(138,107,28,0.35), 0 8px 24px -10px rgba(138,107,28,0.35)",
+        gold: "0 0 0 1px rgba(226,184,60,0.35), 0 8px 26px -10px rgba(226,184,60,0.30)",
         "gold-lg":
-          "0 0 0 1px rgba(138,107,28,0.45), 0 18px 45px -14px rgba(138,107,28,0.45)",
-        card: "0 1px 2px rgba(28,24,19,0.05), 0 8px 24px -14px rgba(28,24,19,0.18)",
-        "card-hover": "0 2px 4px rgba(28,24,19,0.06), 0 22px 50px -18px rgba(28,24,19,0.28)",
+          "0 0 0 1px rgba(226,184,60,0.45), 0 18px 46px -14px rgba(226,184,60,0.40)",
+        card: "0 1px 2px rgba(0,0,0,0.30), 0 10px 26px -14px rgba(0,0,0,0.55)",
+        "card-hover": "0 2px 4px rgba(0,0,0,0.35), 0 24px 54px -18px rgba(0,0,0,0.70)",
       },
       keyframes: {
         shine: {

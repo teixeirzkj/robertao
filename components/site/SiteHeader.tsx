@@ -65,10 +65,10 @@ export default function SiteHeader({
       className="fixed inset-x-0 top-0 z-50"
       animate={{
         backdropFilter: scrolled ? "blur(16px)" : "blur(0px)",
-        backgroundColor: scrolled ? "rgba(247,245,240,0.85)" : "rgba(247,245,240,0)",
+        backgroundColor: scrolled ? "rgba(20,28,36,0.88)" : "rgba(20,28,36,0)",
         boxShadow: scrolled
-          ? "0 1px 0 rgba(138,107,28,0.18), 0 10px 30px -18px rgba(28,24,19,0.25)"
-          : "0 0 0 rgba(28,24,19,0)",
+          ? "0 1px 0 rgba(226,184,60,0.22), 0 10px 30px -18px rgba(0,0,0,0.6)"
+          : "0 0 0 rgba(0,0,0,0)",
       }}
       transition={{ duration: 0.25, ease: "easeOut" }}
     >
@@ -139,7 +139,7 @@ export default function SiteHeader({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileOpen(false)}
-              className="fixed inset-0 z-40 bg-ink/40 lg:hidden"
+              className="fixed inset-0 z-40 bg-black/70 lg:hidden"
             />
             <motion.aside
               initial={{ x: "100%" }}

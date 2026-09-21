@@ -132,7 +132,7 @@ export default function OrderStatus({
       </Link>
 
       {/* resumo do pedido */}
-      <div className="mt-6 rounded-3xl border border-ink/10 bg-white p-5 sm:p-6">
+      <div className="mt-6 rounded-3xl border border-ink/10 bg-paper-100 p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-[11px] uppercase tracking-[0.18em] text-ink/45">Pedido</p>
@@ -276,7 +276,7 @@ export default function OrderStatus({
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className="flex items-start gap-2 rounded-xl border border-ink/12 bg-white px-4 py-3 text-sm text-ink/65"
+                  className="flex items-start gap-2 rounded-xl border border-ink/12 bg-paper-100 px-4 py-3 text-sm text-ink/65"
                 >
                   <AlertCircle className="mt-0.5 size-4 shrink-0" />
                   {error}
@@ -298,7 +298,7 @@ export default function OrderStatus({
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
-            className="mt-4 overflow-hidden rounded-3xl border border-gold/40 bg-white p-6 text-center sm:p-10"
+            className="mt-4 overflow-hidden rounded-3xl border border-gold/40 bg-paper-100 p-6 text-center sm:p-10"
           >
             <div className="flex flex-col items-center gap-5">
               <motion.div
@@ -375,7 +375,7 @@ export default function OrderStatus({
                 </p>
               </motion.div>
             ) : (
-              <div className="rounded-3xl border border-ink/10 bg-white p-6 text-center">
+              <div className="rounded-3xl border border-ink/10 bg-paper-100 p-6 text-center">
                 <Check className="mx-auto size-8 text-gold" />
                 <p className="mt-3 font-display text-lg font-700 text-ink">
                   Cotas liberadas com sucesso
@@ -387,7 +387,7 @@ export default function OrderStatus({
               </div>
             )}
 
-            <div className="rounded-3xl border border-ink/10 bg-white p-5 sm:p-6">
+            <div className="rounded-3xl border border-ink/10 bg-paper-100 p-5 sm:p-6">
               <div className="mb-3 flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] text-ink/45">
                   <Ticket className="size-3.5" />
@@ -444,7 +444,7 @@ export default function OrderStatus({
             key="expirado"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-4 rounded-3xl border border-ink/12 bg-white p-6 text-center sm:p-8"
+            className="mt-4 rounded-3xl border border-ink/12 bg-paper-100 p-6 text-center sm:p-8"
           >
             <TimerOff className="mx-auto size-9 text-ink/35" />
             <p className="mt-3 font-display text-lg font-700 text-ink">

@@ -62,7 +62,7 @@ export default function Gallery({
         {children && (
           <>
             {/* escurece o rodapé para o texto sobreposto ficar legível */}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-ink/85 via-ink/45 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/85 via-black/45 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">{children}</div>
           </>
         )}

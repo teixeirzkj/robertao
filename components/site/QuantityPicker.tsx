@@ -48,7 +48,7 @@ export default function QuantityPicker({
               "disabled:cursor-not-allowed disabled:opacity-40",
               pick === popular
                 ? "border-gold bg-gold/10 pt-6 shadow-gold"
-                : "border-ink/10 bg-white pt-3 hover:border-gold/50"
+                : "border-ink/10 bg-paper-100 pt-3 hover:border-gold/50"
             )}
           >
             {pick === popular && (
@@ -72,7 +72,7 @@ export default function QuantityPicker({
       </div>
 
       <div className={cn("grid gap-2", cta && "sm:grid-cols-2")}>
-        <div className="flex items-center gap-2 rounded-xl border border-ink/10 bg-white p-1.5">
+        <div className="flex items-center gap-2 rounded-xl border border-ink/10 bg-paper-100 p-1.5">
           <button
             type="button"
             disabled={disabled || quantity <= min}

@@ -33,8 +33,9 @@ A quantidade de cotas disponíveis não é exibida no site — só a porcentagem
 Os números das cotas premiadas são públicos; acima de 4 prêmios a lista mostra os
 4 primeiros e um botão "ver todas".
 
-O visual é claro (branco e dourado) e o painel, no celular, troca a barra de abas
-por um menu com todas as seções.
+O visual é escuro (fundo #141c24, cartões #212b36) com dourado nos destaques.
+No celular, o site usa um menu lateral e o painel troca a barra de abas por um
+menu com todas as seções.
 
 **Painel administrativo (`/admin`)**
 

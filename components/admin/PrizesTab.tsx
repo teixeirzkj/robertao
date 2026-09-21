@@ -219,7 +219,7 @@ export default function PrizesTab({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.25 }}
-              className="rounded-2xl border border-ink/10 bg-white p-5"
+              className="rounded-2xl border border-ink/10 bg-paper-100 p-5"
             >
               {editingId === prize.id ? (
                 /* ------------------------------------------------ modo edição */
