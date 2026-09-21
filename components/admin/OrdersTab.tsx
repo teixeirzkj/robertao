@@ -76,15 +76,23 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: next }),
     });
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
       toast(data?.error ?? "Não foi possível atualizar.", "erro");
       return;
     }
-    setOrders((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, status: next as OrderWithNumbers["status"] } : o))
-    );
-    toast(next === "pago" ? "Pagamento confirmado." : "Status atualizado.");
+    // Confirmar o pagamento sorteia as cotas no servidor; recarrega para vê-las.
+    if (next === "pago") {
+      const ganhou = data.order?.prizes?.length ?? 0;
+      toast(
+        ganhou > 0
+          ? `Pagamento confirmado — ${data.order.numbers.length} cotas sorteadas, ${ganhou} premiada(s)!`
+          : `Pagamento confirmado — ${data.order?.numbers?.length ?? 0} cotas sorteadas.`
+      );
+    } else {
+      toast(next === "cancelado" ? "Pedido cancelado e cotas liberadas." : "Status atualizado.");
+    }
+    load(search, status, page);
   }
 
   async function remove(order: OrderWithNumbers) {
@@ -242,6 +250,13 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
                         <p className="mb-2 text-[11px] uppercase tracking-[0.15em] text-white/40">
                           Cotas adquiridas ({order.numbers.length})
                         </p>
+                        {order.numbers.length === 0 && (
+                          <div className="rounded-xl border border-dashed border-white/15 bg-ink-900/40 px-4 py-4 text-center text-sm text-white/50">
+                            {order.status === "pendente"
+                              ? `${order.quantity} cota(s) reservadas. Os números são sorteados quando você confirmar o pagamento.`
+                              : "Nenhuma cota vinculada — o pedido foi cancelado."}
+                          </div>
+                        )}
                         <div className="flex max-h-52 flex-wrap gap-1.5 overflow-y-auto">
                           {order.numbers.map((n) => {
                             const isPrize = order.prizes.some((p) => p.number === n);
@@ -265,14 +280,25 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
                         {order.status !== "pago" && (
                           <Button size="sm" onClick={() => changeStatus(order.id, "pago")}>
                             <Check className="size-4" />
-                            Confirmar pagamento
+                            {order.numbers.length === 0
+                              ? "Confirmar pagamento e sortear cotas"
+                              : "Confirmar pagamento"}
                           </Button>
                         )}
                         {order.status !== "pendente" && (
                           <Button
                             size="sm"
                             variant="dark"
-                            onClick={() => changeStatus(order.id, "pendente")}
+                            onClick={() => {
+                              if (
+                                order.numbers.length > 0 &&
+                                !window.confirm(
+                                  `Voltar o pedido ${order.code} para pendente devolve as ${order.numbers.length} cotas para a rifa. Ao confirmar o pagamento de novo, outros números serão sorteados. Continuar?`
+                                )
+                              )
+                                return;
+                              changeStatus(order.id, "pendente");
+                            }}
                           >
                             Marcar como pendente
                           </Button>
@@ -281,7 +307,15 @@ export default function OrdersTab({ totalNumbers }: { totalNumbers: number }) {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => changeStatus(order.id, "cancelado")}
+                            onClick={() => {
+                              if (
+                                !window.confirm(
+                                  `Cancelar o pedido ${order.code}? As cotas voltam para a rifa.`
+                                )
+                              )
+                                return;
+                              changeStatus(order.id, "cancelado");
+                            }}
                           >
                             <X className="size-4" />
                             Cancelar

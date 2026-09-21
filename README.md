@@ -3,38 +3,73 @@
 Site de rifa única com painel administrativo e banco de dados Postgres.
 O visitante cai direto na rifa — não existe página de catálogo.
 
+**As cotas só existem depois do pagamento confirmado.** O pedido nasce pendente
+reservando a quantidade; quando o pagamento entra, o servidor sorteia os números
+e o comprador vê o resultado na tela com a animação do sorteio.
+
 ## O que o sistema faz
 
-**Site público (`/`)**
+**Site público**
 
-- Página única da rifa: galeria, título, descrição, valor da cota, progresso de vendas.
-- Compra de cotas com formulário (nome, telefone, e-mail, CPF e data de nascimento).
-- Os números são **sorteados no servidor** e nunca se repetem entre pessoas.
-- Se uma cota premiada cair para o comprador, o aviso **"Sua cota foi premiada!"**
-  aparece na hora, com confete e o nome do prêmio.
-- Instruções de pagamento via Pix com o código do pedido.
-- `/meus-numeros`: consulta das cotas por CPF, telefone ou código do pedido.
+| Rota | O que é |
+| --- | --- |
+| `/` | A rifa: galeria, valor da cota, progresso, cotas premiadas, compra |
+| `/pedido/[codigo]` | Pagamento do pedido, espera da confirmação e o sorteio das cotas |
+| `/meus-numeros` | Consulta de cotas por CPF, telefone ou código do pedido |
+
+O fluxo de compra:
+
+1. O visitante escolhe a quantidade e preenche nome, telefone, e-mail, CPF e
+   data de nascimento (validados no cliente **e** no servidor).
+2. O pedido é criado como **pendente** — sem nenhuma cota ainda — e reserva a
+   quantidade por um tempo configurável (padrão 60 min).
+3. Ele vai para `/pedido/[codigo]`, paga via Pix e a página fica verificando a
+   confirmação sozinha, com contagem regressiva da reserva.
+4. Confirmado o pagamento, o servidor **sorteia os números** e a página roda a
+   animação do sorteio. Se uma cota premiada cair, aparece **"Sua cota foi
+   premiada!"** com confete e o prêmio.
+
+A quantidade de cotas disponíveis não é exibida no site — só a porcentagem vendida.
 
 **Painel administrativo (`/admin`)**
 
 | Aba | O que faz |
 | --- | --- |
-| Visão geral | Cotas vendidas, arrecadação, pedidos e prêmios conquistados. |
-| Rifa | Edita título, subtítulo, descrição, regulamento, imagens, valor da cota, total de cotas, mínimo/máximo por compra, atalhos de quantidade, data e status do sorteio, chave Pix e contatos. |
-| Cotas premiadas | Cadastra os prêmios e **sorteia** quais números vão escondê-los (ou define manualmente). Mostra quem conquistou cada um. |
-| Pedidos | Lista todas as compras com os dados do comprador e **todas as cotas adquiridas**. Busca por nome, CPF, telefone, e-mail, código ou número da cota. Confirma pagamento, cancela ou exclui (devolvendo as cotas). |
-| Buscar cota | Digite o número da cota premiada e veja imediatamente quem comprou, com telefone e botão para ligar. |
-| Sorteio final | Sorteia o prêmio principal entre todas as cotas vendidas e mostra os dados do ganhador. |
+| Visão geral | Cotas vendidas, reservadas e livres, arrecadação, pedidos pendentes, prêmios conquistados. |
+| Rifa | Edita título, subtítulo, descrição, regulamento, imagens, valor da cota, total de cotas, mínimo/máximo por compra, atalhos de quantidade, data e status, dificuldade das cotas premiadas, janela de reserva, chave Pix e contatos. |
+| Cotas premiadas | Cadastra, **edita** (nome, valor, imagem, número) e **exclui** prêmios. Sorteia os números secretos ou define manualmente. Mostra quem conquistou cada um. |
+| Pedidos | Todas as compras com os dados do comprador e as cotas adquiridas. Busca por nome, CPF, telefone, e-mail, código ou número da cota. **Confirmar pagamento sorteia as cotas.** Cancelar ou voltar para pendente devolve as cotas à rifa. |
+| Cotas | Duas consultas: o titular de um número específico, e a **maior e a menor cota vendida em um período** (ex.: até 20/12 às 18h), com os dados de quem comprou e botão para ligar. |
+| Sorteio final | Sorteia o prêmio principal entre as cotas pagas e mostra os dados do ganhador. |
+
+## Confirmação de pagamento
+
+Hoje a confirmação é manual, na aba **Pedidos**. Para automatizar (InfinitePay
+via n8n), aponte o fluxo para o webhook:
+
+```
+POST /api/webhooks/pagamento
+x-webhook-secret: <WEBHOOK_SECRET>
+
+{ "code": "RBAB12CD", "status": "paid" }
+```
+
+- `code` aceita também `orderId`, `order_id` ou `reference`.
+- `status` reconhece `paid`, `pago`, `approved`, `aprovado`, `succeeded`,
+  `confirmed` e `success`. Qualquer outro valor é ignorado sem erro, então
+  eventos de "pendente" não confirmam nada.
+- **É idempotente**: reenviar o mesmo pedido devolve as mesmas cotas sem
+  sortear de novo — retentativas do n8n são seguras.
+- Sem `WEBHOOK_SECRET` definido, o endpoint responde 503 e não confirma nada.
 
 ## Como as cotas premiadas funcionam
 
-Cada prêmio recebe um número secreto sorteado pelo painel. Na hora da compra, o
-servidor distribui números aleatórios — mas as cotas premiadas são **seguradas**
-no começo da rifa para que ninguém leve os prêmios nas primeiras compras.
+Cada prêmio recebe um número secreto sorteado pelo painel. As cotas premiadas
+são **seguradas** no começo da rifa para que ninguém leve os prêmios nas
+primeiras compras: a chance de liberação parte do valor em *Dificuldade das
+cotas premiadas (%)* e sobe até 100% quando 75% da rifa foi vendida.
 
-A chance de liberação parte do valor configurado em
-*Dificuldade das cotas premiadas (%)* e sobe até 100% quando 75% da rifa foi
-vendida. Na prática, com a configuração padrão (12%):
+Com a configuração padrão (12%), os prêmios saem assim:
 
 | Faixa da rifa vendida | Prêmios que saem |
 | --- | --- |
@@ -46,11 +81,13 @@ Todos os prêmios sempre saem antes do fim da rifa.
 
 ## Garantia de números únicos
 
-Três camadas impedem cota repetida:
+Quatro camadas impedem cota repetida:
 
-1. Um *advisory lock* no Postgres serializa todas as compras.
-2. Os candidatos vêm de uma consulta que exclui os números já vendidos.
-3. `tickets.number` é **chave primária** — o banco rejeita qualquer duplicata.
+1. Um *advisory lock* no Postgres serializa todas as distribuições de cotas.
+2. Pedidos pendentes **reservam** a quantidade, então a rifa não vende mais
+   cotas do que tem.
+3. Os candidatos vêm de uma consulta que exclui os números já vendidos.
+4. `tickets.number` é **chave primária** — o banco rejeita qualquer duplicata.
 
 Pedido, cotas e prêmios são gravados na mesma transação: ou tudo entra, ou nada entra.
 
@@ -76,13 +113,10 @@ npm run dev
 
 As tabelas são criadas automaticamente na primeira consulta ao banco.
 
-### Páginas
-
-| Rota | O que é |
-| --- | --- |
-| `/` | A rifa — galeria, cotas premiadas, compra |
-| `/meus-numeros` | Consulta de cotas por CPF, telefone ou código |
-| `/admin` | Painel administrativo (login por senha) |
+> **Projeto dentro do OneDrive?** O sync transforma arquivos do `.next` em
+> placeholders na nuvem e o `next dev` quebra com `EINVAL ... readlink`. O
+> `npm run dev:local` já contorna isso: ele limpa o `.next` e o marca como
+> "sempre manter neste dispositivo" antes de subir o Next.
 
 ### Scripts
 
@@ -91,17 +125,20 @@ As tabelas são criadas automaticamente na primeira consulta ao banco.
 | `npm run dev:local` | Banco local embutido + site, tudo junto |
 | `npm run dev` | Só o site (exige `DATABASE_URL`) |
 | `npm run dev:db` | Só o banco local, na porta 54321 |
-| `npm run seed` | Popula rifa, prêmios e compras de exemplo |
+| `npm run seed` | Configura a rifa e cria compras de exemplo |
+| `npm run reset -- --sim` | Apaga o banco local (`.pgdata/`) |
 | `npm run build` | Build de produção |
 
 ## Deploy na Vercel
 
 1. Importe o repositório na Vercel.
 2. Em **Storage**, crie um Postgres (ou use Neon/Supabase) e conecte ao projeto.
-3. Em **Settings → Environment Variables**, confirme/defina:
+3. Em **Settings → Environment Variables**, defina:
    - `DATABASE_URL` — string de conexão do Postgres (use a versão *pooled*).
-   - `ADMIN_PASSWORD` — senha do painel.
+   - `ADMIN_PASSWORD` — senha do painel. **Defina antes do primeiro deploy**,
+     senão vale a senha padrão que está no código.
    - `ADMIN_SESSION_SECRET` — opcional, segredo do cookie de sessão.
+   - `WEBHOOK_SECRET` — só quando for ligar a confirmação automática.
 4. Faça o deploy e abra `/admin` para configurar a rifa.
 
 > As tabelas (`raffle`, `orders`, `tickets`, `prizes`) são criadas sozinhas —

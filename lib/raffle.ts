@@ -1,13 +1,17 @@
 import crypto from "crypto";
+import type { PoolClient } from "pg";
 import { query, transaction } from "@/lib/db";
 import type {
   Order,
   OrderWithNumbers,
   Prize,
   PrizeWithBuyer,
+  PublicOrder,
   PublicRaffle,
   Raffle,
   RaffleStats,
+  TicketRange,
+  WonPrize,
 } from "@/lib/types";
 
 /** Chave do advisory lock que serializa a distribuição de cotas. */
@@ -40,6 +44,7 @@ function mapRaffle(row: Row): Raffle {
     drawDate: row.draw_date ?? "",
     status: row.status,
     prizeChance: row.prize_chance,
+    reservationMinutes: row.reservation_minutes ?? 60,
     pixKey: row.pix_key ?? "",
     pixName: row.pix_name ?? "",
     whatsapp: row.whatsapp ?? "",
@@ -71,6 +76,7 @@ const EDITABLE: Record<string, string> = {
   drawDate: "draw_date",
   status: "status",
   prizeChance: "prize_chance",
+  reservationMinutes: "reservation_minutes",
   pixKey: "pix_key",
   pixName: "pix_name",
   whatsapp: "whatsapp",
@@ -128,13 +134,21 @@ export async function updateRaffle(patch: Record<string, unknown>): Promise<Raff
 
 /* ----------------------------------------------------------- estatisticas */
 
+/** Cotas presas em pedidos pendentes dentro da janela de reserva. */
+const RESERVED_SQL = `
+  SELECT COALESCE(SUM(quantity), 0)::text AS reserved FROM orders
+  WHERE status = 'pendente'
+    AND created_at > now() - ($1::int * interval '1 minute')`;
+
 export async function getStats(): Promise<RaffleStats> {
-  const [raffle, sold, orders, prizes] = await Promise.all([
-    getRaffle(),
+  const raffle = await getRaffle();
+  const [sold, reserved, orders, prizes] = await Promise.all([
     query<{ count: string }>("SELECT COUNT(*)::text AS count FROM tickets"),
+    query<{ reserved: string }>(RESERVED_SQL, [raffle.reservationMinutes]),
     query<Record<string, string>>(
       `SELECT COUNT(*)::text AS total,
               COUNT(*) FILTER (WHERE status = 'pago')::text AS paid,
+              COUNT(*) FILTER (WHERE status = 'pendente')::text AS pending,
               COALESCE(SUM(total_cents) FILTER (WHERE status <> 'cancelado'), 0)::text AS revenue,
               COALESCE(SUM(total_cents) FILTER (WHERE status = 'pago'), 0)::text AS paid_revenue
        FROM orders`
@@ -147,11 +161,14 @@ export async function getStats(): Promise<RaffleStats> {
   ]);
 
   const soldCount = Number(sold.rows[0].count);
+  const reservedCount = Number(reserved.rows[0].reserved);
   return {
     sold: soldCount,
-    available: Math.max(raffle.totalNumbers - soldCount, 0),
+    reserved: reservedCount,
+    available: Math.max(raffle.totalNumbers - soldCount - reservedCount, 0),
     soldPercent: raffle.totalNumbers ? (soldCount / raffle.totalNumbers) * 100 : 0,
     ordersCount: Number(orders.rows[0].total),
+    pendingCount: Number(orders.rows[0].pending),
     paidCount: Number(orders.rows[0].paid),
     revenueCents: Number(orders.rows[0].revenue),
     paidRevenueCents: Number(orders.rows[0].paid_revenue),
@@ -164,15 +181,19 @@ export async function getPublicRaffle(): Promise<PublicRaffle> {
   const [raffle, stats, prizes] = await Promise.all([
     getRaffle(),
     getStats(),
-    query<Row>("SELECT id, label, value_cents, order_id FROM prizes ORDER BY value_cents DESC, id ASC"),
+    query<Row>(
+      "SELECT id, label, value_cents, image, order_id FROM prizes ORDER BY value_cents DESC, id ASC"
+    ),
   ]);
   return {
     ...raffle,
-    stats: { sold: stats.sold, available: stats.available, soldPercent: stats.soldPercent },
+    // Nao expomos a quantidade de cotas disponiveis no site.
+    stats: { sold: stats.sold, soldPercent: stats.soldPercent },
     prizes: prizes.rows.map((p) => ({
       id: p.id,
       label: p.label,
       valueCents: p.value_cents,
+      image: p.image ?? "",
       claimed: Boolean(p.order_id),
     })),
   };
@@ -185,6 +206,7 @@ function mapPrize(row: Row): Prize {
     id: row.id,
     label: row.label,
     valueCents: row.value_cents,
+    image: row.image ?? "",
     number: row.number ?? null,
     orderId: row.order_id ?? null,
     claimedAt: row.claimed_at ? new Date(row.claimed_at).toISOString() : null,
@@ -205,18 +227,22 @@ export async function listPrizes(): Promise<PrizeWithBuyer[]> {
   }));
 }
 
-export async function createPrize(label: string, valueCents: number): Promise<Prize> {
+export async function createPrize(
+  label: string,
+  valueCents: number,
+  image = ""
+): Promise<Prize> {
   if (!label.trim()) throw new RaffleError("Informe o nome do premio.");
   const { rows } = await query(
-    "INSERT INTO prizes (label, value_cents) VALUES ($1, $2) RETURNING *",
-    [label.trim(), Math.max(0, Math.round(valueCents))]
+    "INSERT INTO prizes (label, value_cents, image) VALUES ($1, $2, $3) RETURNING *",
+    [label.trim(), Math.max(0, Math.round(valueCents)), image.trim()]
   );
   return mapPrize(rows[0]);
 }
 
 export async function updatePrize(
   id: number,
-  patch: { label?: string; valueCents?: number; number?: number | null }
+  patch: { label?: string; valueCents?: number; image?: string; number?: number | null }
 ): Promise<Prize> {
   return transaction(async (client) => {
     await client.query("SELECT pg_advisory_xact_lock($1)", [TICKET_LOCK]);
@@ -244,12 +270,17 @@ export async function updatePrize(
     const sets: string[] = [];
     const values: unknown[] = [];
     if (patch.label !== undefined) {
+      if (!patch.label.trim()) throw new RaffleError("Informe o nome do premio.");
       values.push(patch.label.trim());
       sets.push("label = $" + values.length);
     }
     if (patch.valueCents !== undefined) {
       values.push(Math.max(0, Math.round(patch.valueCents)));
       sets.push("value_cents = $" + values.length);
+    }
+    if (patch.image !== undefined) {
+      values.push(patch.image.trim());
+      sets.push("image = $" + values.length);
     }
     if (patch.number !== undefined) {
       values.push(patch.number);
@@ -273,8 +304,8 @@ export async function deletePrize(id: number) {
 }
 
 /**
- * Sorteia numeros para as cotas premiadas que ainda nao tem numero.
- * `reshuffle` redistribui tambem as que ja tinham numero (menos as conquistadas).
+ * Sorteia números para as cotas premiadas que ainda não têm número.
+ * `reshuffle` redistribui também as que já tinham número (menos as conquistadas).
  */
 export async function drawPrizeNumbers(reshuffle = false): Promise<Prize[]> {
   return transaction(async (client) => {
@@ -351,11 +382,9 @@ export interface BuyerInput {
 }
 
 /**
- * Cria o pedido e distribui as cotas de forma atomica.
- *
- * As cotas premiadas ficam "mais dificeis" no comeco da rifa: a chance de
- * liberacao parte de `prize_chance`% e sobe ate 100% conforme a rifa enche,
- * entao ninguem leva os premios logo nas primeiras compras.
+ * Cria o pedido **sem** distribuir cotas: o pedido nasce pendente e apenas
+ * reserva a quantidade. Os números só são sorteados quando o pagamento é
+ * confirmado (ver `confirmPayment`).
  */
 export async function createOrder(input: BuyerInput): Promise<OrderWithNumbers> {
   return transaction(async (client) => {
@@ -378,63 +407,17 @@ export async function createOrder(input: BuyerInput): Promise<OrderWithNumbers> 
     const soldRes = await client.query<{ count: string }>(
       "SELECT COUNT(*)::text AS count FROM tickets"
     );
+    const reservedRes = await client.query<{ reserved: string }>(RESERVED_SQL, [
+      raffle.reservationMinutes,
+    ]);
     const sold = Number(soldRes.rows[0].count);
-    const available = raffle.totalNumbers - sold;
-    if (available <= 0) throw new RaffleError("Todas as cotas ja foram vendidas.", 409);
+    const reserved = Number(reservedRes.rows[0].reserved);
+    const available = raffle.totalNumbers - sold - reserved;
+
+    if (available <= 0) throw new RaffleError("Todas as cotas ja foram reservadas.", 409);
     if (qty > available) {
       throw new RaffleError("Restam apenas " + available + " cota(s) disponiveis.", 409);
     }
-
-    // Cotas premiadas ainda nao conquistadas.
-    const prizePool = await client.query<{ number: number }>(
-      `SELECT p.number FROM prizes p
-       WHERE p.number IS NOT NULL AND p.order_id IS NULL
-         AND NOT EXISTS (SELECT 1 FROM tickets t WHERE t.number = p.number)`
-    );
-    const prizeNumbers = prizePool.rows.map((r) => r.number);
-
-    // Candidatos comuns suficientes para cobrir o pedido inteiro.
-    const plainRes = await client.query<{ n: number }>(
-      `SELECT gs AS n FROM generate_series(1, $1) gs
-       WHERE NOT EXISTS (SELECT 1 FROM tickets t WHERE t.number = gs)
-         AND NOT EXISTS (SELECT 1 FROM prizes p WHERE p.number = gs AND p.order_id IS NULL)
-       ORDER BY random() LIMIT $2`,
-      [raffle.totalNumbers, qty]
-    );
-    const plain = plainRes.rows.map((r) => r.n);
-
-    const soldRatio = raffle.totalNumbers ? sold / raffle.totalNumbers : 0;
-    const base = Math.min(Math.max(raffle.prizeChance, 0), 100) / 100;
-    // Curva de liberacao: comeca em `base`, sobe devagar e chega a 100% quando
-    // 75% da rifa foi vendida — assim os premios nao saem logo nas primeiras
-    // compras, mas tambem nao ficam todos presos para o ultimo comprador.
-    const ramp = Math.pow(Math.min(soldRatio / 0.75, 1), 1.5);
-    const release = base + (1 - base) * ramp;
-
-    const chosen: number[] = [];
-    const remainingPrizes = [...prizeNumbers];
-    let remainingAvailable = available;
-
-    for (let i = 0; i < qty; i++) {
-      const naturalChance =
-        remainingAvailable > 0 ? remainingPrizes.length / remainingAvailable : 0;
-      const drawsPrize =
-        remainingPrizes.length > 0 &&
-        (plain.length === 0 || (Math.random() < naturalChance && Math.random() < release));
-
-      if (drawsPrize) {
-        chosen.push(remainingPrizes.splice(crypto.randomInt(remainingPrizes.length), 1)[0]);
-      } else if (plain.length) {
-        chosen.push(plain.pop()!);
-      } else if (remainingPrizes.length) {
-        chosen.push(remainingPrizes.splice(crypto.randomInt(remainingPrizes.length), 1)[0]);
-      } else {
-        throw new RaffleError("Nao ha cotas suficientes disponiveis.", 409);
-      }
-      remainingAvailable--;
-    }
-
-    chosen.sort((a, b) => a - b);
 
     const id = crypto.randomUUID();
     const totalCents = qty * raffle.priceCents;
@@ -446,36 +429,200 @@ export async function createOrder(input: BuyerInput): Promise<OrderWithNumbers> 
     }
 
     const orderRes = await client.query(
-      `INSERT INTO orders (id, code, name, phone, email, cpf, birthdate, quantity, total_cents)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      `INSERT INTO orders (id, code, name, phone, email, cpf, birthdate, quantity, total_cents, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pendente') RETURNING *`,
       [id, code, input.name, input.phone, input.email, input.cpf, input.birthdate, qty, totalCents]
     );
+
+    return { ...mapOrder(orderRes.rows[0]), numbers: [], prizes: [] };
+  });
+}
+
+/**
+ * Sorteia `qty` cotas livres, segurando as premiadas no começo da rifa.
+ *
+ * A chance de liberação parte de `prize_chance`% e sobe até 100% quando 75%
+ * da rifa foi vendida — assim os prêmios não saem nas primeiras compras, mas
+ * também não ficam presos para o último comprador.
+ */
+async function drawNumbers(
+  client: PoolClient,
+  raffle: Raffle,
+  qty: number,
+  sold: number
+): Promise<number[]> {
+  const prizePool = await client.query<{ number: number }>(
+    `SELECT p.number FROM prizes p
+     WHERE p.number IS NOT NULL AND p.order_id IS NULL
+       AND NOT EXISTS (SELECT 1 FROM tickets t WHERE t.number = p.number)`
+  );
+  const prizeNumbers = prizePool.rows.map((r) => r.number);
+
+  const plainRes = await client.query<{ n: number }>(
+    `SELECT gs AS n FROM generate_series(1, $1) gs
+     WHERE NOT EXISTS (SELECT 1 FROM tickets t WHERE t.number = gs)
+       AND NOT EXISTS (SELECT 1 FROM prizes p WHERE p.number = gs AND p.order_id IS NULL)
+     ORDER BY random() LIMIT $2`,
+    [raffle.totalNumbers, qty]
+  );
+  const plain = plainRes.rows.map((r) => r.n);
+
+  const available = raffle.totalNumbers - sold;
+  const soldRatio = raffle.totalNumbers ? sold / raffle.totalNumbers : 0;
+  const base = Math.min(Math.max(raffle.prizeChance, 0), 100) / 100;
+  const ramp = Math.pow(Math.min(soldRatio / 0.75, 1), 1.5);
+  const release = base + (1 - base) * ramp;
+
+  const chosen: number[] = [];
+  const remainingPrizes = [...prizeNumbers];
+  let remainingAvailable = available;
+
+  for (let i = 0; i < qty; i++) {
+    const naturalChance = remainingAvailable > 0 ? remainingPrizes.length / remainingAvailable : 0;
+    const drawsPrize =
+      remainingPrizes.length > 0 &&
+      (plain.length === 0 || (Math.random() < naturalChance && Math.random() < release));
+
+    if (drawsPrize) {
+      chosen.push(remainingPrizes.splice(crypto.randomInt(remainingPrizes.length), 1)[0]);
+    } else if (plain.length) {
+      chosen.push(plain.pop()!);
+    } else if (remainingPrizes.length) {
+      chosen.push(remainingPrizes.splice(crypto.randomInt(remainingPrizes.length), 1)[0]);
+    } else {
+      throw new RaffleError("Nao ha cotas suficientes disponiveis.", 409);
+    }
+    remainingAvailable--;
+  }
+
+  chosen.sort((a, b) => a - b);
+  return chosen;
+}
+
+/**
+ * Confirma o pagamento e **só então** sorteia e grava as cotas do pedido.
+ *
+ * É idempotente: chamar de novo em um pedido já pago devolve as mesmas cotas,
+ * sem sortear nada novo — importante para webhooks (InfinitePay/n8n).
+ */
+export async function confirmPayment(idOrCode: string): Promise<OrderWithNumbers> {
+  const result = await transaction(async (client) => {
+    await client.query("SELECT pg_advisory_xact_lock($1)", [TICKET_LOCK]);
+
+    const found = await client.query<Row>(
+      "SELECT * FROM orders WHERE id = $1 OR code = $2 LIMIT 1",
+      [isUuid(idOrCode) ? idOrCode : NIL_UUID, idOrCode.toUpperCase()]
+    );
+    if (!found.rows.length) throw new RaffleError("Pedido nao encontrado", 404);
+    const order = found.rows[0];
+
+    const existing = await client.query<{ count: string }>(
+      "SELECT COUNT(*)::text AS count FROM tickets WHERE order_id = $1",
+      [order.id]
+    );
+
+    // Já tem cotas: apenas garante o status pago e devolve o que existe.
+    if (Number(existing.rows[0].count) > 0) {
+      if (order.status !== "pago") {
+        await client.query(
+          "UPDATE orders SET status = 'pago', paid_at = COALESCE(paid_at, now()) WHERE id = $1",
+          [order.id]
+        );
+      }
+      return order.id as string;
+    }
+
+    if (order.status === "cancelado") {
+      throw new RaffleError("Este pedido foi cancelado e nao pode ser confirmado.", 409);
+    }
+
+    const raffleRes = await client.query("SELECT * FROM raffle WHERE id = 1");
+    const raffle = mapRaffle(raffleRes.rows[0]);
+
+    const soldRes = await client.query<{ count: string }>(
+      "SELECT COUNT(*)::text AS count FROM tickets"
+    );
+    const sold = Number(soldRes.rows[0].count);
+    if (raffle.totalNumbers - sold < order.quantity) {
+      throw new RaffleError(
+        "Restam apenas " +
+          Math.max(raffle.totalNumbers - sold, 0) +
+          " cota(s) livres — nao da para liberar as " +
+          order.quantity +
+          " deste pedido.",
+        409
+      );
+    }
+
+    const chosen = await drawNumbers(client, raffle, order.quantity, sold);
 
     // A PK de `tickets` garante, no banco, que um numero nunca se repete.
     await client.query("INSERT INTO tickets (number, order_id) SELECT unnest($1::int[]), $2", [
       chosen,
-      id,
+      order.id,
     ]);
-
-    const wonRes = await client.query<Row>(
+    await client.query(
       `UPDATE prizes SET order_id = $1, claimed_at = now()
-       WHERE number = ANY($2::int[]) AND order_id IS NULL
-       RETURNING id, label, value_cents, number`,
-      [id, chosen]
+       WHERE number = ANY($2::int[]) AND order_id IS NULL`,
+      [order.id, chosen]
+    );
+    await client.query(
+      "UPDATE orders SET status = 'pago', paid_at = COALESCE(paid_at, now()) WHERE id = $1",
+      [order.id]
     );
 
-    return {
-      ...mapOrder(orderRes.rows[0]),
-      numbers: chosen,
-      prizes: wonRes.rows.map((p) => ({
-        id: p.id,
-        label: p.label,
-        valueCents: p.value_cents,
-        number: p.number,
-      })),
-    };
+    return order.id as string;
+  });
+
+  const order = await getOrder(result);
+  if (!order) throw new RaffleError("Pedido nao encontrado", 404);
+  return order;
+}
+
+/** Devolve as cotas e os prêmios do pedido para a rifa. */
+async function releaseTickets(client: PoolClient, orderId: string) {
+  await client.query("UPDATE prizes SET order_id = NULL, claimed_at = NULL WHERE order_id = $1", [
+    orderId,
+  ]);
+  await client.query(
+    "UPDATE raffle SET winner_number = NULL, winner_order_id = NULL, drawn_at = NULL WHERE winner_order_id = $1",
+    [orderId]
+  );
+  await client.query("DELETE FROM tickets WHERE order_id = $1", [orderId]);
+}
+
+export async function setOrderStatus(id: string, status: string): Promise<OrderWithNumbers> {
+  if (!["pendente", "pago", "cancelado"].includes(status)) {
+    throw new RaffleError("Status invalido.");
+  }
+  if (status === "pago") return confirmPayment(id);
+
+  await transaction(async (client) => {
+    await client.query("SELECT pg_advisory_xact_lock($1)", [TICKET_LOCK]);
+    const found = await client.query("SELECT id FROM orders WHERE id = $1", [id]);
+    if (!found.rows.length) throw new RaffleError("Pedido nao encontrado", 404);
+    // Voltar para pendente ou cancelar libera as cotas ja distribuidas.
+    await releaseTickets(client, id);
+    await client.query("UPDATE orders SET status = $1, paid_at = NULL WHERE id = $2", [status, id]);
+  });
+
+  const order = await getOrder(id);
+  if (!order) throw new RaffleError("Pedido nao encontrado", 404);
+  return order;
+}
+
+/** Exclui o pedido e devolve as cotas (e prêmios) para a rifa. */
+export async function releaseOrder(id: string) {
+  return transaction(async (client) => {
+    await client.query("SELECT pg_advisory_xact_lock($1)", [TICKET_LOCK]);
+    const found = await client.query("SELECT 1 FROM orders WHERE id = $1", [id]);
+    if (!found.rows.length) throw new RaffleError("Pedido nao encontrado", 404);
+    await releaseTickets(client, id);
+    await client.query("DELETE FROM orders WHERE id = $1", [id]);
   });
 }
+
+const NIL_UUID = "00000000-0000-0000-0000-000000000000";
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -487,29 +634,59 @@ async function hydrateOrder(row: Row): Promise<OrderWithNumbers> {
       row.id,
     ]),
     query<Row>(
-      "SELECT id, label, value_cents, number FROM prizes WHERE order_id = $1 ORDER BY value_cents DESC",
+      "SELECT id, label, value_cents, image, number FROM prizes WHERE order_id = $1 ORDER BY value_cents DESC",
       [row.id]
     ),
   ]);
   return {
     ...mapOrder(row),
     numbers: tickets.rows.map((t) => t.number),
-    prizes: prizes.rows.map((p) => ({
-      id: p.id,
-      label: p.label,
-      valueCents: p.value_cents,
-      number: p.number,
-    })),
+    prizes: prizes.rows.map(mapWonPrize),
+  };
+}
+
+function mapWonPrize(p: Row): WonPrize {
+  return {
+    id: p.id,
+    label: p.label,
+    valueCents: p.value_cents,
+    image: p.image ?? "",
+    number: p.number,
   };
 }
 
 export async function getOrder(idOrCode: string): Promise<OrderWithNumbers | null> {
   const { rows } = await query<Row>("SELECT * FROM orders WHERE id = $1 OR code = $2 LIMIT 1", [
-    isUuid(idOrCode) ? idOrCode : "00000000-0000-0000-0000-000000000000",
+    isUuid(idOrCode) ? idOrCode : NIL_UUID,
     idOrCode.toUpperCase(),
   ]);
   if (!rows.length) return null;
   return hydrateOrder(rows[0]);
+}
+
+/** Versão do pedido exibida ao comprador, sem CPF nem e-mail. */
+export async function getPublicOrder(code: string): Promise<PublicOrder | null> {
+  const order = await getOrder(code);
+  if (!order) return null;
+  const raffle = await getRaffle();
+  const expiresAt =
+    order.status === "pendente"
+      ? new Date(
+          new Date(order.createdAt).getTime() + raffle.reservationMinutes * 60_000
+        ).toISOString()
+      : null;
+  return {
+    code: order.code,
+    name: order.name,
+    quantity: order.quantity,
+    totalCents: order.totalCents,
+    status: order.status,
+    createdAt: order.createdAt,
+    paidAt: order.paidAt,
+    numbers: order.numbers,
+    prizes: order.prizes,
+    expiresAt,
+  };
 }
 
 export async function listOrders(opts: {
@@ -587,41 +764,14 @@ export async function listOrders(opts: {
   return { orders, total: Number(countRes.rows[0].count) };
 }
 
-export async function setOrderStatus(id: string, status: string): Promise<Order> {
-  if (!["pendente", "pago", "cancelado"].includes(status)) {
-    throw new RaffleError("Status invalido.");
-  }
-  const { rows } = await query<Row>(
-    `UPDATE orders SET status = $1, paid_at = CASE WHEN $1 = 'pago' THEN now() ELSE NULL END
-     WHERE id = $2 RETURNING *`,
-    [status, id]
-  );
-  if (!rows.length) throw new RaffleError("Pedido nao encontrado", 404);
-  return mapOrder(rows[0]);
-}
-
-/** Exclui o pedido e devolve as cotas (e premios) para a rifa. */
-export async function releaseOrder(id: string) {
-  return transaction(async (client) => {
-    await client.query("SELECT pg_advisory_xact_lock($1)", [TICKET_LOCK]);
-    const found = await client.query("SELECT 1 FROM orders WHERE id = $1", [id]);
-    if (!found.rows.length) throw new RaffleError("Pedido nao encontrado", 404);
-    await client.query("UPDATE prizes SET order_id = NULL, claimed_at = NULL WHERE order_id = $1", [
-      id,
-    ]);
-    await client.query("UPDATE raffle SET winner_number = NULL, winner_order_id = NULL, drawn_at = NULL WHERE winner_order_id = $1", [id]);
-    await client.query("DELETE FROM tickets WHERE order_id = $1", [id]);
-    await client.query("DELETE FROM orders WHERE id = $1", [id]);
-  });
-}
-
 /* ------------------------------------------------------- consulta de cota */
 
 export interface TicketLookup {
   number: number;
   status: "vendida" | "disponivel";
-  prize: { id: number; label: string; valueCents: number; claimed: boolean } | null;
+  prize: { id: number; label: string; valueCents: number; image: string; claimed: boolean } | null;
   order: Order | null;
+  soldAt: string | null;
 }
 
 export async function lookupTicket(number: number): Promise<TicketLookup> {
@@ -630,10 +780,14 @@ export async function lookupTicket(number: number): Promise<TicketLookup> {
     throw new RaffleError("Informe uma cota entre 1 e " + raffle.totalNumbers + ".");
   }
   const [ticket, prize] = await Promise.all([
-    query<Row>("SELECT o.* FROM tickets t JOIN orders o ON o.id = t.order_id WHERE t.number = $1", [
+    query<Row>(
+      `SELECT o.*, t.created_at AS sold_at FROM tickets t
+       JOIN orders o ON o.id = t.order_id WHERE t.number = $1`,
+      [number]
+    ),
+    query<Row>("SELECT id, label, value_cents, image, order_id FROM prizes WHERE number = $1", [
       number,
     ]),
-    query<Row>("SELECT id, label, value_cents, order_id FROM prizes WHERE number = $1", [number]),
   ]);
   return {
     number,
@@ -643,14 +797,87 @@ export async function lookupTicket(number: number): Promise<TicketLookup> {
           id: prize.rows[0].id,
           label: prize.rows[0].label,
           valueCents: prize.rows[0].value_cents,
+          image: prize.rows[0].image ?? "",
           claimed: Boolean(prize.rows[0].order_id),
         }
       : null,
     order: ticket.rows.length ? mapOrder(ticket.rows[0]) : null,
+    soldAt: ticket.rows.length ? new Date(ticket.rows[0].sold_at).toISOString() : null,
   };
 }
 
-/** Consulta publica: todos os pedidos de um CPF ou telefone. */
+/**
+ * Maior e menor cota vendida em um período — ex.: "a maior cota até
+ * 20/12 às 18h". Datas ausentes significam "sem limite".
+ */
+export async function getTicketRange(from?: string, to?: string): Promise<TicketRange> {
+  const raffle = await getRaffle();
+  const fromIso = from ? new Date(from) : null;
+  const toIso = to ? new Date(to) : null;
+  if (fromIso && Number.isNaN(fromIso.getTime())) throw new RaffleError("Data inicial invalida.");
+  if (toIso && Number.isNaN(toIso.getTime())) throw new RaffleError("Data final invalida.");
+  if (fromIso && toIso && fromIso > toIso) {
+    throw new RaffleError("A data inicial precisa ser anterior a data final.");
+  }
+
+  const params = [fromIso, toIso];
+  const windowSql = `
+    FROM tickets t JOIN orders o ON o.id = t.order_id
+    WHERE o.status <> 'cancelado'
+      AND ($1::timestamptz IS NULL OR t.created_at >= $1::timestamptz)
+      AND ($2::timestamptz IS NULL OR t.created_at <= $2::timestamptz)`;
+
+  const agg = await query<Row>(
+    `SELECT MIN(t.number) AS lowest, MAX(t.number) AS highest,
+            COUNT(*)::text AS count, COUNT(DISTINCT o.id)::text AS orders
+     ${windowSql}`,
+    params
+  );
+
+  const count = Number(agg.rows[0].count);
+  if (!count) {
+    return {
+      from: fromIso ? fromIso.toISOString() : null,
+      to: toIso ? toIso.toISOString() : null,
+      count: 0,
+      ordersCount: 0,
+      revenueCents: 0,
+      lowest: null,
+      highest: null,
+    };
+  }
+
+  const edge = async (number: number) => {
+    const { rows } = await query<Row>(
+      `SELECT o.*, t.created_at AS sold_at FROM tickets t
+       JOIN orders o ON o.id = t.order_id WHERE t.number = $1`,
+      [number]
+    );
+    if (!rows.length) return null;
+    return {
+      number,
+      soldAt: new Date(rows[0].sold_at).toISOString(),
+      order: mapOrder(rows[0]),
+    };
+  };
+
+  const [lowest, highest] = await Promise.all([
+    edge(agg.rows[0].lowest),
+    edge(agg.rows[0].highest),
+  ]);
+
+  return {
+    from: fromIso ? fromIso.toISOString() : null,
+    to: toIso ? toIso.toISOString() : null,
+    count,
+    ordersCount: Number(agg.rows[0].orders),
+    revenueCents: count * raffle.priceCents,
+    lowest,
+    highest,
+  };
+}
+
+/** Consulta pública: todos os pedidos de um CPF ou telefone. */
 export async function findOrdersByDocument(value: string): Promise<OrderWithNumbers[]> {
   const digits = value.replace(/\D+/g, "");
   if (digits.length < 10) throw new RaffleError("Informe o CPF completo ou o telefone com DDD.");
@@ -681,10 +908,10 @@ export async function drawGrandPrize(force = false): Promise<GrandDraw> {
     const pick = await client.query<{ number: number; order_id: string }>(
       `SELECT t.number, t.order_id FROM tickets t
        JOIN orders o ON o.id = t.order_id
-       WHERE o.status <> 'cancelado'
+       WHERE o.status = 'pago'
        ORDER BY random() LIMIT 1`
     );
-    if (!pick.rows.length) throw new RaffleError("Nenhuma cota vendida para sortear.");
+    if (!pick.rows.length) throw new RaffleError("Nenhuma cota paga para sortear.");
 
     await client.query(
       `UPDATE raffle SET winner_number = $1, winner_order_id = $2, drawn_at = now(), status = 'encerrada'

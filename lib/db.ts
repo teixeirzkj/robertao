@@ -111,6 +111,14 @@ CREATE TABLE IF NOT EXISTS prizes (
 CREATE INDEX IF NOT EXISTS prizes_number_idx ON prizes (number);
 
 INSERT INTO raffle (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+
+-- Colunas acrescentadas depois da primeira versao (idempotente).
+ALTER TABLE prizes ADD COLUMN IF NOT EXISTS image TEXT NOT NULL DEFAULT '';
+ALTER TABLE raffle ADD COLUMN IF NOT EXISTS reservation_minutes INTEGER NOT NULL DEFAULT 60;
+
+-- Consultas de maior/menor cota por periodo.
+CREATE INDEX IF NOT EXISTS tickets_created_idx ON tickets (created_at);
+CREATE INDEX IF NOT EXISTS orders_status_idx ON orders (status, created_at DESC);
 `;
 
 export async function ensureSchema() {

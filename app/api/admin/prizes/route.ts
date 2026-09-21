@@ -19,7 +19,11 @@ export async function POST(req: Request) {
   if (denied) return denied;
   try {
     const body = await readJson(req);
-    await createPrize(String(body.label ?? ""), Number(body.valueCents ?? 0));
+    await createPrize(
+      String(body.label ?? ""),
+      Number(body.valueCents ?? 0),
+      String(body.image ?? "")
+    );
     return ok({ prizes: await listPrizes() }, 201);
   } catch (err) {
     return handleError(err);

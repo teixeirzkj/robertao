@@ -63,6 +63,7 @@ export default function RaffleTab({
         drawDate: form.drawDate,
         status: form.status,
         prizeChance: form.prizeChance,
+        reservationMinutes: form.reservationMinutes,
         pixKey: form.pixKey,
         pixName: form.pixName,
         whatsapp: form.whatsapp,
@@ -232,6 +233,15 @@ export default function RaffleTab({
             value={form.prizeChance}
             onChange={(e) => set("prizeChance", Number(e.target.value))}
             hint="Chance inicial de liberar uma cota premiada. Sobe até 100% conforme a rifa enche."
+          />
+          <Input
+            label="Reserva do pedido (minutos)"
+            type="number"
+            min={5}
+            max={10080}
+            value={form.reservationMinutes}
+            onChange={(e) => set("reservationMinutes", Number(e.target.value))}
+            hint="Tempo que um pedido pendente segura as cotas antes de liberá-las."
           />
         </div>
       </Card>

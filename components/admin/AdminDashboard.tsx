@@ -16,6 +16,7 @@ import {
   Search,
   Settings2,
   Ticket,
+  Timer,
   Trophy,
   Users,
 } from "lucide-react";
@@ -37,7 +38,7 @@ const TABS: { id: TabId; label: string; icon: React.ComponentType<{ className?: 
   { id: "rifa", label: "Rifa", icon: Settings2 },
   { id: "premiadas", label: "Cotas premiadas", icon: Gift },
   { id: "pedidos", label: "Pedidos", icon: ListOrdered },
-  { id: "cotas", label: "Buscar cota", icon: Search },
+  { id: "cotas", label: "Cotas", icon: Search },
   { id: "sorteio", label: "Sorteio final", icon: Trophy },
 ];
 
@@ -235,9 +236,9 @@ function Overview({
           icon={DollarSign}
         />
         <StatCard
-          label="Pedidos"
-          value={formatNumber(stats.ordersCount)}
-          hint={`${stats.paidCount} pagos`}
+          label="Pedidos pagos"
+          value={formatNumber(stats.paidCount)}
+          hint={`${stats.ordersCount} pedidos no total`}
           icon={Users}
         />
         <StatCard
@@ -247,6 +248,31 @@ function Overview({
           icon={Gift}
         />
       </div>
+
+      {stats.pendingCount > 0 && (
+        <Card>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-xl border border-white/15 bg-white/5">
+                <Timer className="size-5 text-white/60" />
+              </div>
+              <div>
+                <p className="font-display text-sm font-700 text-white">
+                  {stats.pendingCount} pedido(s) aguardando pagamento
+                </p>
+                <p className="text-xs text-white/45">
+                  {formatNumber(stats.reserved)} cota(s) reservadas por até{" "}
+                  {raffle.reservationMinutes} min. Os números só são sorteados quando você
+                  confirma o pagamento.
+                </p>
+              </div>
+            </div>
+            <Button variant="outline" onClick={() => onGo("pedidos")}>
+              Ver pendentes
+            </Button>
+          </div>
+        </Card>
+      )}
 
       <Card title="Progresso da rifa" description={raffle.title}>
         <div className="space-y-3">
@@ -262,6 +288,12 @@ function Overview({
           <div className="flex flex-wrap gap-2 pt-2 text-xs text-white/40">
             <span className="rounded-full border border-white/10 px-3 py-1">
               Valor da cota: {formatBRL(raffle.priceCents)}
+            </span>
+            <span className="rounded-full border border-white/10 px-3 py-1">
+              Reservadas: {formatNumber(stats.reserved)}
+            </span>
+            <span className="rounded-full border border-white/10 px-3 py-1">
+              Livres: {formatNumber(stats.available)}
             </span>
             <span className="rounded-full border border-white/10 px-3 py-1">
               Status: {raffle.status}
@@ -300,7 +332,7 @@ function Overview({
 
       <div className="grid gap-3 sm:grid-cols-3">
         {[
-          { id: "cotas" as TabId, icon: Search, title: "Buscar cota", text: "Ver quem comprou um número específico." },
+          { id: "cotas" as TabId, icon: Search, title: "Cotas", text: "Buscar titular por número e ver maior/menor cota por período." },
           { id: "pedidos" as TabId, icon: ListOrdered, title: "Pedidos", text: "Lista completa com dados dos compradores." },
           { id: "sorteio" as TabId, icon: BarChart3, title: "Sorteio final", text: "Sortear o prêmio principal entre as cotas." },
         ].map((item) => (

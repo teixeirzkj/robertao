@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Gift, Mail, Phone, Search, Ticket, User } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Badge, Card, useToast } from "@/components/admin/primitives";
+import TicketRange from "@/components/admin/TicketRange";
 import { formatBRL, formatDateBR, formatDateTimeBR, onlyDigits, padTicket } from "@/lib/utils";
 import type { Order } from "@/lib/types";
 
@@ -43,7 +44,8 @@ export default function TicketSearchTab({ totalNumbers }: { totalNumbers: number
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-8">
+      <div className="space-y-5">
       <Card
         title="Buscar cota"
         description="Digite o número sorteado para ver imediatamente quem é o titular."
@@ -188,6 +190,11 @@ export default function TicketSearchTab({ totalNumbers }: { totalNumbers: number
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
+
+      <div className="border-t border-white/5 pt-8">
+        <TicketRange totalNumbers={totalNumbers} />
+      </div>
     </div>
   );
 }

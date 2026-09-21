@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   CalendarDays,
@@ -36,14 +35,13 @@ export default function RaffleView({
   raffle: PublicRaffle;
   winner: { number: number; name: string } | null;
 }) {
-  const router = useRouter();
   const [quantity, setQuantity] = useState(Math.max(raffle.minQuantity, 1));
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
-  const soldOut = raffle.stats.available <= 0;
+  const soldOut = raffle.stats.soldPercent >= 100;
   const closed = raffle.status !== "ativa" || soldOut;
   const status = STATUS_LABEL[raffle.status] ?? STATUS_LABEL.ativa;
-  const maxAllowed = Math.min(raffle.maxQuantity, Math.max(raffle.stats.available, 1));
+  const maxAllowed = raffle.maxQuantity;
 
   return (
     <>
@@ -118,9 +116,6 @@ export default function RaffleView({
                   <span className="text-white/50">
                     <CounterOnView value={Math.round(raffle.stats.soldPercent)} suffix="%" /> vendido
                   </span>
-                  <span className="text-white/40">
-                    {formatNumber(raffle.stats.available)} disponíveis
-                  </span>
                 </div>
                 <ProgressBar percent={Math.min(raffle.stats.soldPercent, 100)} />
               </div>
@@ -156,7 +151,7 @@ export default function RaffleView({
                       <ShieldCheck className="size-3.5" /> Números únicos garantidos
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      <Sparkles className="size-3.5" /> Resultado na hora
+                      <Sparkles className="size-3.5" /> Sorteio após o pagamento
                     </span>
                   </div>
                 </>
@@ -216,12 +211,24 @@ export default function RaffleView({
                     )}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <Gift
-                        className={cn(
-                          "size-6 shrink-0",
-                          prize.claimed ? "text-white/25" : "text-gold"
-                        )}
-                      />
+                      {prize.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={prize.image}
+                          alt=""
+                          className={cn(
+                            "size-12 shrink-0 rounded-xl border object-cover",
+                            prize.claimed ? "border-white/10 grayscale" : "border-gold/30"
+                          )}
+                        />
+                      ) : (
+                        <Gift
+                          className={cn(
+                            "size-6 shrink-0",
+                            prize.claimed ? "text-white/25" : "text-gold"
+                          )}
+                        />
+                      )}
                       <span
                         className={cn(
                           "rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]",
@@ -276,8 +283,8 @@ export default function RaffleView({
               },
               {
                 icon: Sparkles,
-                title: "Sorteio na hora",
-                text: "O sistema distribui números aleatórios e exclusivos — nunca repetidos.",
+                title: "Pague e veja o sorteio",
+                text: "Confirmado o pagamento, o sistema sorteia seus números na tela — exclusivos, nunca repetidos.",
               },
               {
                 icon: Trophy,
@@ -332,7 +339,6 @@ export default function RaffleView({
         quantity={Math.min(quantity, maxAllowed)}
         open={checkoutOpen}
         onClose={() => setCheckoutOpen(false)}
-        onCompleted={() => router.refresh()}
       />
     </>
   );

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, ArrowLeft, Gift, Search, Ticket } from "lucide-react";
+import { AlertCircle, ArrowLeft, Clock, Gift, Search, Ticket } from "lucide-react";
+import Link from "next/link";
 import Button from "@/components/ui/Button";
 import Field from "@/components/ui/Field";
 import { formatBRL, formatDateTimeBR, onlyDigits, padTicket } from "@/lib/utils";
@@ -155,6 +155,25 @@ export default function MyNumbers({ totalNumbers }: { totalNumbers: number }) {
                       </span>
                       <span>{formatBRL(order.totalCents)}</span>
                     </div>
+
+                    {order.numbers.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-white/15 bg-ink-900/40 px-4 py-5 text-center">
+                        <Clock className="mx-auto size-6 text-white/30" />
+                        <p className="mt-2 text-sm text-white/60">
+                          {order.status === "cancelado"
+                            ? "Pedido cancelado — as cotas voltaram para a rifa."
+                            : "Seus números são sorteados quando o pagamento for confirmado."}
+                        </p>
+                        {order.status === "pendente" && (
+                          <Link
+                            href={`/pedido/${order.code}`}
+                            className="mt-3 inline-block rounded-xl border border-gold/50 px-4 py-2 text-xs font-semibold text-gold transition-colors hover:bg-gold/10"
+                          >
+                            Concluir pagamento
+                          </Link>
+                        )}
+                      </div>
+                    ) : (
                     <div className="flex max-h-44 flex-wrap gap-1.5 overflow-y-auto">
                       {order.numbers.map((n) => {
                         const isPrize = order.prizes.some((p) => p.number === n);
@@ -172,6 +191,7 @@ export default function MyNumbers({ totalNumbers }: { totalNumbers: number }) {
                         );
                       })}
                     </div>
+                    )}
                   </div>
                 </div>
               );

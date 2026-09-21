@@ -34,6 +34,7 @@ const INT_FIELDS = [
   "minQuantity",
   "maxQuantity",
   "prizeChance",
+  "reservationMinutes",
 ] as const;
 
 export async function PATCH(req: Request) {
@@ -59,6 +60,9 @@ export async function PATCH(req: Request) {
     }
     if (patch.prizeChance !== undefined) {
       patch.prizeChance = Math.min(Math.max(patch.prizeChance as number, 0), 100);
+    }
+    if (patch.reservationMinutes !== undefined) {
+      patch.reservationMinutes = Math.min(Math.max(patch.reservationMinutes as number, 5), 10080);
     }
     if (patch.minQuantity !== undefined && (patch.minQuantity as number) < 1) {
       patch.minQuantity = 1;
