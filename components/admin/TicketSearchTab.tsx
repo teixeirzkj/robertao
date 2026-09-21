@@ -16,7 +16,13 @@ interface Lookup {
   order: Order | null;
 }
 
-export default function TicketSearchTab({ totalNumbers }: { totalNumbers: number }) {
+export default function TicketSearchTab({
+  totalNumbers,
+  priceCents,
+}: {
+  totalNumbers: number;
+  priceCents: number;
+}) {
   const toast = useToast();
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
@@ -193,7 +199,7 @@ export default function TicketSearchTab({ totalNumbers }: { totalNumbers: number
       </div>
 
       <div className="border-t border-white/5 pt-8">
-        <TicketRange totalNumbers={totalNumbers} />
+        <TicketRange totalNumbers={totalNumbers} priceCents={priceCents} />
       </div>
     </div>
   );

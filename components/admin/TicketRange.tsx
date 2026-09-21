@@ -31,7 +31,13 @@ const ATALHOS = [
   { label: "Desde o início", horas: null },
 ];
 
-export default function TicketRange({ totalNumbers }: { totalNumbers: number }) {
+export default function TicketRange({
+  totalNumbers,
+  priceCents,
+}: {
+  totalNumbers: number;
+  priceCents: number;
+}) {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState(() => toLocalInput(new Date()));
   const [range, setRange] = useState<Range | null>(null);
@@ -157,7 +163,10 @@ export default function TicketRange({ totalNumbers }: { totalNumbers: number }) 
                   <strong className="text-white">{range.ordersCount}</strong> pedido(s)
                 </span>
                 <span className="text-white/45">
-                  <strong className="text-gold">{formatBRL(range.revenueCents)}</strong>
+                  cota a <strong className="text-white">{formatBRL(priceCents)}</strong>
+                </span>
+                <span className="text-white/45">
+                  total <strong className="text-gold">{formatBRL(range.revenueCents)}</strong>
                 </span>
               </div>
             </Card>
@@ -178,6 +187,7 @@ export default function TicketRange({ totalNumbers }: { totalNumbers: number }) 
                   icone={ArrowUpWideNarrow}
                   edge={range.highest}
                   totalNumbers={totalNumbers}
+                  priceCents={priceCents}
                   destaque
                 />
                 <Edge
@@ -185,6 +195,7 @@ export default function TicketRange({ totalNumbers }: { totalNumbers: number }) 
                   icone={ArrowDownWideNarrow}
                   edge={range.lowest}
                   totalNumbers={totalNumbers}
+                  priceCents={priceCents}
                 />
               </div>
             )}
@@ -200,12 +211,14 @@ function Edge({
   icone: Icone,
   edge,
   totalNumbers,
+  priceCents,
   destaque,
 }: {
   titulo: string;
   icone: React.ComponentType<{ className?: string }>;
   edge: Range["highest"];
   totalNumbers: number;
+  priceCents: number;
   destaque?: boolean;
 }) {
   if (!edge) return null;
@@ -232,13 +245,23 @@ function Edge({
         vendida em {formatDateTimeBR(edge.soldAt)}
       </p>
 
-      <div className="mt-4 space-y-1 rounded-xl border border-white/10 bg-ink-900/50 px-4 py-3">
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        <Dado rotulo="Valor da cota" valor={formatBRL(priceCents)} />
+        <Dado rotulo="Cotas no pedido" valor={formatNumber(edge.order.quantity)} />
+        <Dado
+          rotulo="Total do pedido"
+          valor={formatBRL(edge.order.totalCents)}
+          destaque={destaque}
+        />
+      </div>
+
+      <div className="mt-2 space-y-1 rounded-xl border border-white/10 bg-ink-900/50 px-4 py-3">
         <p className="font-display text-sm font-700 text-white">{edge.order.name}</p>
         <p className="text-xs text-white/50">
           {edge.order.phone} · {edge.order.cpf}
         </p>
         <p className="text-xs text-white/35">
-          Pedido {edge.order.code} · {edge.order.quantity} cota(s) ·{" "}
+          Pedido {edge.order.code} ·{" "}
           {edge.order.status === "pago" ? "pago" : edge.order.status}
         </p>
       </div>
@@ -261,5 +284,32 @@ function Edge({
         </Button>
       </div>
     </Card>
+  );
+}
+
+function Dado({
+  rotulo,
+  valor,
+  destaque,
+}: {
+  rotulo: string;
+  valor: string;
+  destaque?: boolean;
+}) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-ink-900/50 px-3 py-2.5">
+      <span className="block text-[10px] uppercase tracking-[0.12em] text-white/35">
+        {rotulo}
+      </span>
+      <p
+        className={
+          destaque
+            ? "mt-0.5 font-display text-sm font-700 text-gold"
+            : "mt-0.5 font-display text-sm font-700 text-white"
+        }
+      >
+        {valor}
+      </p>
+    </div>
   );
 }

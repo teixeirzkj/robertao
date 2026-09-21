@@ -194,7 +194,12 @@ function Dashboard() {
 
             {tab === "pedidos" && <OrdersTab totalNumbers={raffle.totalNumbers} />}
 
-            {tab === "cotas" && <TicketSearchTab totalNumbers={raffle.totalNumbers} />}
+            {tab === "cotas" && (
+              <TicketSearchTab
+                totalNumbers={raffle.totalNumbers}
+                priceCents={raffle.priceCents}
+              />
+            )}
 
             {tab === "sorteio" && (
               <DrawTab raffle={raffle} soldCount={stats.sold} onDrawn={load} />
