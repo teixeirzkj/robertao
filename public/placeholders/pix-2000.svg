@@ -1,45 +1,58 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-label="R$ 2.000 no Pix">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-label="Imagem do prêmio">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0.4" y2="1">
-      <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="55%" stop-color="#fdfcfa"/>
-      <stop offset="100%" stop-color="#f2efe7"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0%" stop-color="#fffdf7"/>
+      <stop offset="55%" stop-color="#f6efdc"/>
+      <stop offset="100%" stop-color="#eee3c6"/>
     </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="34%" r="64%">
-      <stop offset="0%" stop-color="#c9a227" stop-opacity="0.22"/>
-      <stop offset="100%" stop-color="#c9a227" stop-opacity="0"/>
+    <radialGradient id="glow" cx="50%" cy="38%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0.35">
-      <stop offset="0%" stop-color="#6d5416"/>
-      <stop offset="26%" stop-color="#c9a227"/>
-      <stop offset="50%" stop-color="#a3812a"/>
-      <stop offset="76%" stop-color="#c9a227"/>
-      <stop offset="100%" stop-color="#6d5416"/>
+    <linearGradient id="moeda" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#f6e2a0"/>
+      <stop offset="45%" stop-color="#d9b13c"/>
+      <stop offset="100%" stop-color="#a3812a"/>
+    </linearGradient>
+    <linearGradient id="fita" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e8c55a"/>
+      <stop offset="100%" stop-color="#b8901f"/>
     </linearGradient>
   </defs>
 
   <rect width="1200" height="900" fill="url(#bg)"/>
   <rect width="1200" height="900" fill="url(#glow)"/>
 
-  <g opacity="0.16" stroke="#a3812a" stroke-width="1.5" fill="none">
-    <circle cx="600" cy="420" r="250"/>
-    <circle cx="600" cy="420" r="320"/>
+  <g opacity="0.13" stroke="#a3812a" stroke-width="1.5" fill="none">
+    <circle cx="600" cy="420" r="210"/>
+    <circle cx="600" cy="420" r="300"/>
     <circle cx="600" cy="420" r="390"/>
   </g>
 
-  <text x="600" y="235" text-anchor="middle" fill="#8a6b1c" font-family="Sora,Inter,sans-serif"
-        font-size="30" font-weight="700" letter-spacing="13">PREMIO PRINCIPAL</text>
+  <!-- confetes -->
+  <g fill="url(#fita)" opacity="0.85">
+    <rect x="150" y="130" width="34" height="13" rx="3" transform="rotate(-24 150 130)"/>
+    <rect x="985" y="180" width="30" height="12" rx="3" transform="rotate(35 985 180)"/>
+    <rect x="215" y="690" width="30" height="12" rx="3" transform="rotate(18 215 690)"/>
+    <rect x="940" y="700" width="34" height="13" rx="3" transform="rotate(-30 940 700)"/>
+    <rect x="1075" y="430" width="26" height="11" rx="3" transform="rotate(12 1075 430)"/>
+    <rect x="110" y="410" width="26" height="11" rx="3" transform="rotate(-8 110 410)"/>
+  </g>
 
-  <text x="600" y="470" text-anchor="middle" fill="url(#gold)" font-family="Sora,Inter,sans-serif"
-        font-size="215" font-weight="800" letter-spacing="-6">R$ 2.000</text>
+  <!-- moeda com o losango do Pix -->
+  <g transform="translate(600 420)">
+    <ellipse cx="14" cy="18" rx="196" ry="196" fill="#a3812a" opacity="0.22"/>
+    <circle r="196" fill="url(#moeda)"/>
+    <circle r="196" fill="none" stroke="#8a6b1c" stroke-opacity="0.45" stroke-width="5"/>
+    <circle r="163" fill="none" stroke="#8a6b1c" stroke-opacity="0.3" stroke-width="3"/>
+    <g fill="#8a6b1c" opacity="0.62">
+      <rect x="-42" y="-116" width="84" height="84" rx="17" transform="rotate(45 0 -74)"/>
+      <rect x="-116" y="-42" width="84" height="84" rx="17" transform="rotate(45 -74 0)"/>
+      <rect x="32" y="-42" width="84" height="84" rx="17" transform="rotate(45 74 0)"/>
+      <rect x="-42" y="32" width="84" height="84" rx="17" transform="rotate(45 0 74)"/>
+    </g>
+  </g>
 
-  <text x="600" y="565" text-anchor="middle" fill="#1c1813" font-family="Sora,Inter,sans-serif"
-        font-size="60" font-weight="700" letter-spacing="10" opacity="0.88">NO PIX</text>
-
-  <rect x="405" y="640" width="390" height="76" rx="38" fill="#ffffff" stroke="#a3812a" stroke-opacity="0.5" stroke-width="2"/>
-  <text x="600" y="689" text-anchor="middle" fill="#8a6b1c" font-family="Inter,sans-serif"
-        font-size="30" font-weight="600" letter-spacing="2">cotas a R$ 0,25</text>
-
-  <text x="600" y="800" text-anchor="middle" fill="#1c1813" fill-opacity="0.42"
-        font-family="Inter,sans-serif" font-size="26" letter-spacing="4">6.250 COTAS · 10 COTAS PREMIADAS</text>
+  <text x="600" y="760" text-anchor="middle" fill="#8a6b1c" font-family="Inter,sans-serif"
+        font-size="27" font-weight="600" letter-spacing="7" opacity="0.75">PAGAMENTO VIA PIX</text>
 </svg>

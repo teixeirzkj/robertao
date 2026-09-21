@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import {
+  ArrowDownUp,
   CalendarDays,
   ChevronDown,
   ChevronUp,
+  FileText,
   Gift,
+  Loader2,
   Lock,
+  Search,
   ShieldCheck,
   Sparkles,
   Ticket,
@@ -21,14 +26,17 @@ import { CounterOnView } from "@/components/ui/Counter";
 import Gallery from "@/components/site/Gallery";
 import QuantityPicker from "@/components/site/QuantityPicker";
 import CheckoutModal from "@/components/site/CheckoutModal";
-import { cn, formatBRL, padTicket } from "@/lib/utils";
+import { cn, formatBRL, formatNumber, padTicket } from "@/lib/utils";
 import type { PublicRaffle } from "@/lib/types";
 
 const STATUS_LABEL: Record<string, { text: string; className: string }> = {
-  ativa: { text: "Rifa aberta", className: "border-gold/40 bg-gold/10 text-gold" },
-  pausada: { text: "Vendas pausadas", className: "border-ink/15 bg-ink/5 text-ink/65" },
-  encerrada: { text: "Rifa encerrada", className: "border-crimson/40 bg-crimson/10 text-crimson" },
+  ativa: { text: "Adquira já!", className: "bg-gold-metal text-ink-900" },
+  pausada: { text: "Vendas pausadas", className: "bg-paper-200 text-ink/70" },
+  encerrada: { text: "Rifa encerrada", className: "bg-crimson text-white" },
 };
+
+/** Acima deste total, a lista de cotas premiadas vem recolhida. */
+const COTAS_VISIVEIS = 4;
 
 export default function RaffleView({
   raffle,
@@ -41,263 +49,249 @@ export default function RaffleView({
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [verTodasAsCotas, setVerTodasAsCotas] = useState(false);
 
-  // Acima de 4 cotas premiadas a lista fica grande demais: mostra 4 e um botao.
-  const COTAS_VISIVEIS = 4;
-  const temMaisCotas = raffle.prizes.length > COTAS_VISIVEIS;
-  const cotasExibidas =
-    temMaisCotas && !verTodasAsCotas ? raffle.prizes.slice(0, COTAS_VISIVEIS) : raffle.prizes;
-
   const soldOut = raffle.stats.soldPercent >= 100;
   const closed = raffle.status !== "ativa" || soldOut;
   const status = STATUS_LABEL[raffle.status] ?? STATUS_LABEL.ativa;
   const maxAllowed = raffle.maxQuantity;
 
+  const temMaisCotas = raffle.prizes.length > COTAS_VISIVEIS;
+  const cotasExibidas =
+    temMaisCotas && !verTodasAsCotas ? raffle.prizes.slice(0, COTAS_VISIVEIS) : raffle.prizes;
+  const conquistadas = raffle.prizes.filter((p) => p.claimed).length;
+
   return (
     <>
-      {/* ------------------------------------------------------------- hero */}
-      <section id="rifa" className="relative overflow-hidden pb-12 pt-24 sm:pb-16 sm:pt-32">
-        <div className="pointer-events-none absolute inset-0 bg-paper-radial" />
-
-        <div className="relative mx-auto max-w-6xl px-5 lg:px-8">
-          <div className="grid gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:gap-14">
-            <motion.div
-              initial={{ opacity: 0, y: 28 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <Gallery images={raffle.images} title={raffle.title} />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 28 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col gap-5 sm:gap-6"
-            >
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]",
-                      status.className
-                    )}
-                  >
-                    <span className="size-1.5 rounded-full bg-current animate-pulse-glow" />
-                    {soldOut ? "Cotas esgotadas" : status.text}
-                  </span>
-                  {raffle.drawDate && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 px-3 py-1 text-[11px] text-ink/60">
-                      <CalendarDays className="size-3" />
-                      {raffle.drawDate}
-                    </span>
-                  )}
-                </div>
-
-                <h1 className="font-display text-3xl font-800 leading-[1.08] tracking-tight text-ink sm:text-4xl lg:text-5xl">
-                  {raffle.title}
-                </h1>
-                {raffle.subtitle && (
-                  <p className="text-[15px] leading-relaxed text-ink/60 sm:text-base">{raffle.subtitle}</p>
-                )}
-              </div>
-
-              <div className="rounded-2xl border border-ink/10 bg-white px-5 py-4">
-                <span className="text-[11px] uppercase tracking-[0.18em] text-ink/45">
-                  Por cota
-                </span>
-                <p className="font-display text-3xl font-800 text-gradient-gold">
-                  {formatBRL(raffle.priceCents)}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-ink/55">
-                    <CounterOnView value={Math.round(raffle.stats.soldPercent)} suffix="%" /> vendido
-                  </span>
-                </div>
-                <ProgressBar percent={Math.min(raffle.stats.soldPercent, 100)} />
-              </div>
-
-              {closed ? (
-                <div className="rounded-2xl border border-ink/10 bg-white p-6 text-center">
-                  <Lock className="mx-auto size-7 text-ink/45" />
-                  <p className="mt-3 font-display text-lg font-700 text-ink">
-                    {soldOut ? "Todas as cotas foram vendidas" : "Vendas indisponíveis"}
-                  </p>
-                  <p className="mt-1 text-sm text-ink/50">
-                    {soldOut
-                      ? "Acompanhe o sorteio pelas nossas redes sociais."
-                      : "Esta rifa não está aceitando compras no momento."}
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <QuantityPicker
-                    quantity={Math.min(quantity, maxAllowed)}
-                    onChange={setQuantity}
-                    quickPicks={raffle.quickPicks}
-                    min={raffle.minQuantity}
-                    max={maxAllowed}
-                    priceCents={raffle.priceCents}
-                  />
-                  <Button size="lg" fullWidth onClick={() => setCheckoutOpen(true)}>
-                    <Ticket className="size-4" />
-                    Quero minhas cotas
-                  </Button>
-                  <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[11px] text-ink/40">
-                    <span className="inline-flex items-center gap-1.5">
-                      <ShieldCheck className="size-3.5" /> Números únicos garantidos
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <Sparkles className="size-3.5" /> Sorteio após o pagamento
-                    </span>
-                  </div>
-                </>
+      <div className="mx-auto max-w-2xl px-4 pb-14 pt-20 sm:px-5 sm:pt-24">
+        {/* ----------------------------------------------------------- capa */}
+        <motion.section
+          id="rifa"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <Gallery images={raffle.images} title={raffle.title}>
+            <span
+              className={cn(
+                "inline-block rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em]",
+                status.className
               )}
-            </motion.div>
-          </div>
-        </div>
-      </section>
+            >
+              {soldOut ? "Cotas esgotadas" : status.text}
+            </span>
+            <h1 className="mt-2 font-display text-lg font-800 uppercase leading-tight tracking-tight text-white sm:text-2xl">
+              {raffle.title}
+            </h1>
+            {raffle.subtitle && (
+              <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-white/80 sm:text-xs">
+                {raffle.subtitle}
+              </p>
+            )}
+          </Gallery>
+        </motion.section>
 
-      {/* -------------------------------------------------- ganhador final */}
-      {winner && (
-        <section className="relative px-5 pb-12 sm:pb-16 lg:px-8">
-          <Reveal className="mx-auto max-w-6xl">
-            <div className="overflow-hidden rounded-3xl border border-gold bg-gold-metal bg-[length:200%_auto] animate-shine p-6 text-center text-ink-900 sm:p-8">
-              <Trophy className="mx-auto size-9" />
-              <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.25em]">
+        {/* barra "meus números" */}
+        <Link
+          href="/meus-numeros"
+          className="mt-2 flex items-center justify-center gap-2 rounded-xl border border-ink/10 bg-white py-3 text-sm font-semibold text-ink transition-colors hover:border-gold/50 hover:text-gold"
+        >
+          <Search className="size-4 text-gold" />
+          Meus números
+        </Link>
+
+        {/* preço por cota */}
+        <div className="mt-2 flex items-center justify-center gap-2.5 py-1">
+          <span className="text-sm text-ink/55">Por apenas</span>
+          <span className="rounded-lg border border-gold/40 bg-gold/10 px-3 py-1.5 font-display text-xl font-800 text-gold">
+            {formatBRL(raffle.priceCents)}
+          </span>
+        </div>
+
+        {/* atalhos */}
+        <div className="mt-1 space-y-2">
+          <MenorEMaiorTitulo totalNumbers={raffle.totalNumbers} />
+          <a
+            href="#premiadas"
+            className="flex items-center justify-center gap-2 rounded-xl border border-ink/10 bg-white py-3 text-sm font-semibold text-ink transition-colors hover:border-gold/50 hover:text-gold"
+          >
+            <Trophy className="size-4 text-gold" />
+            Prêmios
+          </a>
+        </div>
+
+        {/* progresso */}
+        <div className="mt-4 space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-ink/55">
+              <CounterOnView value={Math.round(raffle.stats.soldPercent)} suffix="%" /> vendido
+            </span>
+            {raffle.drawDate && (
+              <span className="inline-flex items-center gap-1.5 text-ink/50">
+                <CalendarDays className="size-3" />
+                {raffle.drawDate}
+              </span>
+            )}
+          </div>
+          <ProgressBar percent={Math.min(raffle.stats.soldPercent, 100)} />
+        </div>
+
+        {/* ------------------------------------------------------- compra */}
+        <div className="mt-5">
+          {closed ? (
+            <div className="rounded-2xl border border-ink/10 bg-white p-6 text-center">
+              <Lock className="mx-auto size-7 text-ink/45" />
+              <p className="mt-3 font-display text-lg font-700 text-ink">
+                {soldOut ? "Todas as cotas foram vendidas" : "Vendas indisponíveis"}
+              </p>
+              <p className="mt-1 text-sm text-ink/50">
+                {soldOut
+                  ? "Acompanhe o sorteio pelas nossas redes sociais."
+                  : "Esta rifa não está aceitando compras no momento."}
+              </p>
+            </div>
+          ) : (
+            <>
+              <QuantityPicker
+                quantity={Math.min(quantity, maxAllowed)}
+                onChange={setQuantity}
+                quickPicks={raffle.quickPicks}
+                min={raffle.minQuantity}
+                max={maxAllowed}
+                cta={
+                  <Button size="lg" fullWidth onClick={() => setCheckoutOpen(true)}>
+                    <Ticket className="size-4 shrink-0" />
+                    <span className="flex flex-col items-start leading-tight">
+                      <span className="text-xs font-normal">Quero participar</span>
+                      <span className="font-display text-base font-800">
+                        {formatBRL(Math.min(quantity, maxAllowed) * raffle.priceCents)}
+                      </span>
+                    </span>
+                  </Button>
+                }
+              />
+
+              <a
+                href="#regulamento"
+                className="mt-2 flex items-center justify-center gap-2 rounded-xl border border-ink/10 bg-white py-3 text-sm font-semibold text-ink transition-colors hover:border-gold/50 hover:text-gold"
+              >
+                <FileText className="size-4 text-gold" />
+                Descrição / Regulamento
+              </a>
+
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[11px] text-ink/45">
+                <span className="inline-flex items-center gap-1.5">
+                  <ShieldCheck className="size-3.5" /> Números únicos garantidos
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Sparkles className="size-3.5" /> Sorteio após o pagamento
+                </span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* --------------------------------------------------- ganhador */}
+        {winner && (
+          <Reveal className="mt-6">
+            <div className="overflow-hidden rounded-2xl border border-gold bg-gold-metal bg-[length:200%_auto] animate-shine p-5 text-center text-ink-900">
+              <Trophy className="mx-auto size-8" />
+              <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.25em]">
                 Prêmio principal
               </p>
-              <p className="mt-2 font-display text-2xl font-800 sm:text-3xl">
-                {winner.name}
-              </p>
+              <p className="mt-1.5 font-display text-2xl font-800">{winner.name}</p>
               <p className="mt-1 text-sm font-semibold">
                 Cota vencedora {padTicket(winner.number, raffle.totalNumbers)}
                 {raffle.grandPrize && ` · ${raffle.grandPrize}`}
               </p>
             </div>
           </Reveal>
-        </section>
-      )}
+        )}
 
-      {/* ------------------------------------------------- cotas premiadas */}
-      {raffle.prizes.length > 0 && (
-        <section id="premiadas" className="px-5 py-12 sm:py-16 lg:px-8">
-          <div className="mx-auto max-w-6xl">
-            <Reveal className="mb-8 text-center">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-gold">
-                Prêmios instantâneos
-              </span>
-              <h2 className="mt-2 font-display text-2xl font-800 text-ink sm:text-3xl">
-                Cotas premiadas
-              </h2>
-              <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-ink/55">
-                Alguns números escondem prêmios que saem na hora da compra. Se um deles
-                cair para você, o aviso aparece na tela imediatamente.
-              </p>
-            </Reveal>
+        {/* ------------------------------------------- títulos premiados */}
+        {raffle.prizes.length > 0 && (
+          <section id="premiadas" className="mt-6 scroll-mt-24">
+            <Reveal>
+              <div className="overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-card">
+                <div className="flex items-center justify-between gap-3 border-b border-ink/8 bg-paper-50 px-4 py-3">
+                  <span className="flex items-center gap-2 font-display text-sm font-700 text-ink">
+                    <Trophy className="size-4 text-gold" />
+                    Títulos premiados
+                  </span>
+                  <span className="rounded-full border border-gold/40 px-2.5 py-0.5 font-mono text-xs font-bold text-gold">
+                    {conquistadas}/{raffle.prizes.length}
+                  </span>
+                </div>
 
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-              {cotasExibidas.map((prize, i) => (
-                <Reveal key={prize.id} delay={i * 0.05}>
-                  <div
-                    className={cn(
-                      "group relative h-full overflow-hidden rounded-2xl border p-4 transition-all duration-300 sm:p-5",
-                      prize.claimed
-                        ? "border-ink/8 bg-paper-100 opacity-55"
-                        : "border-gold/25 bg-white shine-sweep hover:border-gold/60 hover:shadow-gold"
-                    )}
-                  >
-                    <div className="flex flex-col items-start gap-2 sm:flex-row sm:justify-between sm:gap-3">
-                      {prize.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={prize.image}
-                          alt=""
-                          className={cn(
-                            "size-10 shrink-0 rounded-xl border object-cover sm:size-12",
-                            prize.claimed ? "border-ink/10 grayscale" : "border-gold/30"
-                          )}
-                        />
-                      ) : (
-                        <Gift
-                          className={cn(
-                            "size-6 shrink-0",
-                            prize.claimed ? "text-ink/30" : "text-gold"
-                          )}
-                        />
+                <ul className="divide-y divide-ink/8">
+                  {cotasExibidas.map((prize) => (
+                    <li
+                      key={prize.id}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 sm:gap-4 sm:px-4",
+                        prize.claimed && "bg-gold/5"
                       )}
+                    >
                       <span
                         className={cn(
-                          "rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]",
+                          "shrink-0 rounded-lg px-2.5 py-1.5 font-mono text-[13px] font-bold tabular-nums sm:text-sm",
                           prize.claimed
-                            ? "border-ink/10 text-ink/40"
-                            : "border-gold/40 text-gold"
+                            ? "border border-gold/50 bg-white text-gold"
+                            : "bg-paper-200 text-ink/70"
                         )}
                       >
-                        {prize.claimed ? "Conquistada" : "Disponível"}
+                        {prize.number === null
+                          ? "—"
+                          : padTicket(prize.number, raffle.totalNumbers)}
                       </span>
-                    </div>
-                    <p className="mt-3 font-display text-base font-700 leading-snug text-ink sm:mt-4 sm:text-lg">
-                      {prize.label}
-                    </p>
-                    {prize.valueCents > 0 && (
-                      <p className="mt-1 text-[13px] text-gold/80 sm:text-sm">{formatBRL(prize.valueCents)}</p>
-                    )}
-                    {prize.number === null ? (
-                      <p className="mt-3 text-[10px] uppercase tracking-[0.12em] text-ink/35 sm:text-[11px]">
-                        A sortear
-                      </p>
-                    ) : (
-                      <div className="mt-3 flex items-baseline gap-2">
-                        <span className="text-[10px] uppercase tracking-[0.12em] text-ink/40">
-                          Cota
-                        </span>
-                        <span
-                          className={cn(
-                            "font-mono text-lg font-bold tabular-nums",
-                            prize.claimed ? "text-ink/40 line-through" : "text-gradient-gold"
-                          )}
-                        >
-                          {padTicket(prize.number, raffle.totalNumbers)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </Reveal>
-              ))}
-            </div>
 
-            {temMaisCotas && (
-              <div className="mt-6 flex justify-center">
-                <Button
-                  variant="outline"
-                  onClick={() => setVerTodasAsCotas((v) => !v)}
-                  aria-expanded={verTodasAsCotas}
-                >
-                  {verTodasAsCotas ? (
-                    <>
-                      <ChevronUp className="size-4" />
-                      Mostrar menos
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="size-4" />
-                      Ver todas as {raffle.prizes.length} cotas premiadas
-                    </>
-                  )}
-                </Button>
+                      <span className="flex-1 truncate text-[13px] font-semibold text-ink/80 sm:text-sm">
+                        {prize.valueCents > 0 ? formatBRL(prize.valueCents) : prize.label}
+                      </span>
+
+                      {prize.claimed ? (
+                        <span className="flex shrink-0 items-center gap-1.5 text-[13px] font-semibold text-gold sm:text-sm">
+                          <span className="max-w-[8rem] truncate">
+                            {prize.winner ?? "Premiada"}
+                          </span>
+                          <Trophy className="size-3.5 shrink-0" />
+                        </span>
+                      ) : (
+                        <span className="shrink-0 text-[11px] uppercase tracking-[0.1em] text-ink/40 sm:text-xs">
+                          {prize.number === null ? "A sortear" : "Disponível"}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+
+                {temMaisCotas && (
+                  <button
+                    onClick={() => setVerTodasAsCotas((v) => !v)}
+                    aria-expanded={verTodasAsCotas}
+                    className="flex w-full items-center justify-center gap-2 border-t border-ink/8 bg-paper-50 px-4 py-3 text-xs font-semibold text-gold transition-colors hover:bg-gold/10 cursor-pointer"
+                  >
+                    {verTodasAsCotas ? (
+                      <>
+                        <ChevronUp className="size-4" />
+                        Mostrar menos
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="size-4" />
+                        Ver todas as {raffle.prizes.length} cotas premiadas
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
-            )}
-          </div>
-        </section>
-      )}
+            </Reveal>
+          </section>
+        )}
+      </div>
 
       {/* ----------------------------------------------------- como funciona */}
       <section id="como-funciona" className="px-5 py-12 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-6xl">
-          <Reveal className="mb-10 text-center">
+          <Reveal className="mb-8 text-center">
             <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-gold">
               Simples assim
             </span>
@@ -326,7 +320,7 @@ export default function RaffleView({
               {
                 icon: Trophy,
                 title: "Concorra a tudo",
-                text: "Prêmios instantâneos nas cotas premiadas e o prêmio principal no sorteio final.",
+                text: "Prêmios instantâneos nas cotas premiadas e o prêmio principal na Loteria Federal.",
               },
             ].map((item, i) => (
               <Reveal key={item.title} delay={i * 0.07}>
@@ -347,13 +341,13 @@ export default function RaffleView({
         </div>
       </section>
 
-      {/* -------------------------------------------------------- descricao */}
+      {/* -------------------------------------------- descrição e regulamento */}
       {(raffle.description || raffle.rules) && (
-        <section id="regulamento" className="px-5 pb-16 sm:pb-20 lg:px-8">
+        <section id="regulamento" className="scroll-mt-24 px-5 pb-16 sm:pb-20 lg:px-8">
           <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-2">
             {raffle.description && (
               <Reveal>
-                <article className="h-full rounded-3xl border border-ink/10 bg-white p-5 sm:p-7">
+                <article className="h-full rounded-2xl border border-ink/10 bg-white p-5 sm:p-7">
                   <h3 className="font-display text-lg font-700 text-ink">Sobre o prêmio</h3>
                   <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-ink/65">
                     {raffle.description}
@@ -363,7 +357,7 @@ export default function RaffleView({
             )}
             {raffle.rules && (
               <Reveal delay={0.08}>
-                <article className="h-full rounded-3xl border border-ink/10 bg-white p-5 sm:p-7">
+                <article className="h-full rounded-2xl border border-ink/10 bg-white p-5 sm:p-7">
                   <h3 className="font-display text-lg font-700 text-ink">Regulamento</h3>
                   <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-ink/65">
                     {raffle.rules}
@@ -382,5 +376,90 @@ export default function RaffleView({
         onClose={() => setCheckoutOpen(false)}
       />
     </>
+  );
+}
+
+/** Menor e maior cota já vendida, consultadas sob demanda. */
+function MenorEMaiorTitulo({ totalNumbers }: { totalNumbers: number }) {
+  const [aberto, setAberto] = useState(false);
+  const [dados, setDados] = useState<{
+    count: number;
+    lowest: number | null;
+    highest: number | null;
+  } | null>(null);
+  const [carregando, setCarregando] = useState(false);
+
+  async function alternar() {
+    const proximo = !aberto;
+    setAberto(proximo);
+    if (!proximo || dados) return;
+
+    setCarregando(true);
+    try {
+      const res = await fetch("/api/raffle/titulos", { cache: "no-store" });
+      if (res.ok) setDados(await res.json());
+    } catch {
+      /* mostra o aviso de indisponivel abaixo */
+    } finally {
+      setCarregando(false);
+    }
+  }
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-ink/10 bg-white">
+      <button
+        onClick={alternar}
+        aria-expanded={aberto}
+        className="flex w-full items-center justify-center gap-2 py-3 text-sm font-semibold text-ink transition-colors hover:text-gold cursor-pointer"
+      >
+        <ArrowDownUp className="size-4 text-gold" />
+        Menor e maior título
+        <ChevronDown
+          className={cn("size-4 text-ink/40 transition-transform", aberto && "rotate-180")}
+        />
+      </button>
+
+      {aberto && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          className="overflow-hidden border-t border-ink/8"
+        >
+          {carregando ? (
+            <p className="flex items-center justify-center gap-2 py-5 text-sm text-ink/50">
+              <Loader2 className="size-4 animate-spin text-gold" />
+              Consultando...
+            </p>
+          ) : !dados || dados.count === 0 ? (
+            <p className="py-5 text-center text-sm text-ink/50">
+              Nenhuma cota vendida ainda — todos os números estão livres.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 divide-x divide-ink/8">
+              <div className="px-4 py-4 text-center">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-ink/45">
+                  Menor título
+                </p>
+                <p className="mt-1 font-mono text-xl font-bold tabular-nums text-ink">
+                  {padTicket(dados.lowest!, totalNumbers)}
+                </p>
+              </div>
+              <div className="px-4 py-4 text-center">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-ink/45">
+                  Maior título
+                </p>
+                <p className="mt-1 font-mono text-xl font-bold tabular-nums text-gradient-gold">
+                  {padTicket(dados.highest!, totalNumbers)}
+                </p>
+              </div>
+              <p className="col-span-2 border-t border-ink/8 py-2.5 text-center text-[11px] text-ink/45">
+                {formatNumber(dados.count)} cota(s) já vendida(s)
+              </p>
+            </div>
+          )}
+        </motion.div>
+      )}
+    </div>
   );
 }

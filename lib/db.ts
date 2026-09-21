@@ -123,6 +123,10 @@ INSERT INTO raffle (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 -- Colunas acrescentadas depois da primeira versao (idempotente).
 ALTER TABLE prizes ADD COLUMN IF NOT EXISTS image TEXT NOT NULL DEFAULT '';
 ALTER TABLE raffle ADD COLUMN IF NOT EXISTS reservation_minutes INTEGER NOT NULL DEFAULT 60;
+-- InfiniteTag da InfinitePay (sem o $), usada para gerar o link de pagamento.
+ALTER TABLE raffle ADD COLUMN IF NOT EXISTS infinitepay_handle TEXT NOT NULL DEFAULT '';
+-- Convite do grupo de WhatsApp (https://chat.whatsapp.com/...).
+ALTER TABLE raffle ADD COLUMN IF NOT EXISTS whatsapp_group TEXT NOT NULL DEFAULT '';
 
 -- Consultas de maior/menor cota por periodo.
 CREATE INDEX IF NOT EXISTS tickets_created_idx ON tickets (created_at);

@@ -6,7 +6,16 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function Gallery({ images, title }: { images: string[]; title: string }) {
+export default function Gallery({
+  images,
+  title,
+  children,
+}: {
+  images: string[];
+  title: string;
+  /** Sobreposto ao rodapé da imagem (selo, título, subtítulo). */
+  children?: React.ReactNode;
+}) {
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [broken, setBroken] = useState<Record<number, boolean>>({});
@@ -21,10 +30,8 @@ export default function Gallery({ images, title }: { images: string[]; title: st
   }
 
   return (
-    <div className="space-y-3">
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl border border-ink/10 bg-paper-100">
-        <div className="absolute inset-0 bg-paper-radial" />
-
+    <div>
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-ink/10 bg-paper-100">
         <AnimatePresence initial={false} mode="popLayout" custom={direction}>
           {current && !broken[index] ? (
             <motion.img
@@ -44,7 +51,7 @@ export default function Gallery({ images, title }: { images: string[]; title: st
               key="empty"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-ink/30"
+              className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-ink/25"
             >
               <ImageOff className="size-10" />
               <span className="text-xs uppercase tracking-[0.2em]">Sem imagem</span>
@@ -52,21 +59,27 @@ export default function Gallery({ images, title }: { images: string[]; title: st
           )}
         </AnimatePresence>
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-white/95 to-transparent" />
+        {children && (
+          <>
+            {/* escurece o rodapé para o texto sobreposto ficar legível */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-ink/85 via-ink/45 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">{children}</div>
+          </>
+        )}
 
         {images.length > 1 && (
           <>
             <button
               onClick={() => go(-1)}
               aria-label="Imagem anterior"
-              className="absolute left-3 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-ink/12 bg-paper-50 text-ink backdrop-blur transition-colors hover:border-gold/60 hover:text-gold cursor-pointer"
+              className="absolute left-3 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-ink/10 bg-paper/85 text-ink backdrop-blur transition-colors hover:border-gold/60 hover:text-gold cursor-pointer"
             >
               <ChevronLeft className="size-5" />
             </button>
             <button
               onClick={() => go(1)}
-              aria-label="Proxima imagem"
-              className="absolute right-3 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-ink/12 bg-paper-50 text-ink backdrop-blur transition-colors hover:border-gold/60 hover:text-gold cursor-pointer"
+              aria-label="Próxima imagem"
+              className="absolute right-3 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-ink/10 bg-paper/85 text-ink backdrop-blur transition-colors hover:border-gold/60 hover:text-gold cursor-pointer"
             >
               <ChevronRight className="size-5" />
             </button>
@@ -75,7 +88,7 @@ export default function Gallery({ images, title }: { images: string[]; title: st
       </div>
 
       {images.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
           {images.map((img, i) => (
             <button
               key={img + i}
@@ -84,14 +97,12 @@ export default function Gallery({ images, title }: { images: string[]; title: st
                 setIndex(i);
               }}
               className={cn(
-                "relative size-16 shrink-0 overflow-hidden rounded-xl border transition-all duration-200 cursor-pointer",
-                i === index
-                  ? "border-gold shadow-gold"
-                  : "border-ink/10 opacity-60 hover:opacity-100"
+                "relative size-14 shrink-0 overflow-hidden rounded-lg border transition-all duration-200 cursor-pointer",
+                i === index ? "border-gold shadow-gold" : "border-ink/10 opacity-60 hover:opacity-100"
               )}
             >
               {broken[i] ? (
-                <span className="flex size-full items-center justify-center bg-paper-100 text-ink/35">
+                <span className="flex size-full items-center justify-center bg-paper-100 text-ink/30">
                   <ImageOff className="size-4" />
                 </span>
               ) : (

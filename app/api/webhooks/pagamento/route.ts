@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { confirmPayment } from "@/lib/raffle";
+import { confirmPayment, getOrder } from "@/lib/raffle";
 import { fail, handleError, ok, readJson } from "@/lib/api";
 
 export const runtime = "nodejs";
@@ -21,7 +21,10 @@ export const dynamic = "force-dynamic";
 function authorized(req: Request, body: Record<string, unknown>) {
   const expected = process.env.WEBHOOK_SECRET;
   if (!expected) return false;
-  const provided = req.headers.get("x-webhook-secret") ?? String(body.secret ?? "");
+  const provided =
+    req.headers.get("x-webhook-secret") ||
+    new URL(req.url).searchParams.get("secret") ||
+    String(body.secret ?? "");
   if (!provided) return false;
   const a = Buffer.from(crypto.createHash("sha256").update(provided).digest());
   const b = Buffer.from(crypto.createHash("sha256").update(expected).digest());
@@ -39,13 +42,33 @@ export async function POST(req: Request) {
     }
     if (!authorized(req, body)) return fail("Nao autorizado.", 401);
 
-    // Aceita `code` ou `orderId`, e o status em vários formatos de gateway.
-    const code = String(body.code ?? body.orderId ?? body.order_id ?? body.reference ?? "").trim();
-    if (!code) return fail("Informe o codigo do pedido em 'code'.");
+    // A InfinitePay envia `order_nsu`; outros gateways usam `code`/`orderId`.
+    const code = String(
+      body.order_nsu ?? body.code ?? body.orderId ?? body.order_id ?? body.reference ?? ""
+    ).trim();
+    if (!code) return fail("Informe o codigo do pedido em 'order_nsu' ou 'code'.");
 
+    // A InfinitePay so chama o webhook quando o pagamento e aprovado e nao
+    // envia campo de status, por isso o padrao e "paid".
     const status = String(body.status ?? "paid").toLowerCase();
     if (!PAID.has(status)) {
       return ok({ ignored: true, reason: "status '" + status + "' nao indica pagamento" });
+    }
+
+    // Confere o valor pago, para ninguem liberar cotas pagando menos.
+    const pago = Number(body.paid_amount ?? body.amount ?? NaN);
+    if (Number.isFinite(pago)) {
+      const pedido = await getOrder(code);
+      if (!pedido) return fail("Pedido nao encontrado.", 404);
+      if (Math.round(pago) < pedido.totalCents) {
+        console.error(
+          "[webhook] valor pago abaixo do pedido",
+          pedido.code,
+          pago,
+          pedido.totalCents
+        );
+        return fail("Valor pago menor que o total do pedido.", 409);
+      }
     }
 
     const order = await confirmPayment(code);
@@ -55,6 +78,7 @@ export async function POST(req: Request) {
       quantity: order.quantity,
       numbers: order.numbers,
       prizes: order.prizes,
+      receiptUrl: body.receipt_url ?? null,
     });
   } catch (err) {
     return handleError(err);

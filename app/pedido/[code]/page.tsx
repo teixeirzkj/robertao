@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import SiteHeader from "@/components/site/SiteHeader";
+import SiteHeader, { WhatsAppFloating } from "@/components/site/SiteHeader";
 import SiteFooter from "@/components/site/SiteFooter";
 import OrderStatus from "@/components/site/OrderStatus";
 import SetupNotice from "@/components/site/SetupNotice";
@@ -9,7 +9,7 @@ import { getPublicOrder, getPublicRaffle } from "@/lib/raffle";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Seu pedido | Robertão Rifas",
+  title: "Seu pedido | Robertão Premiações",
   robots: { index: false, follow: false },
 };
 
@@ -34,11 +34,16 @@ export default async function OrderPage({ params }: Props) {
 
   return (
     <>
-      <SiteHeader instagram={raffle.instagram} />
+      <SiteHeader
+        instagram={raffle.instagram}
+        whatsapp={raffle.whatsapp}
+        whatsappGroup={raffle.whatsappGroup}
+      />
       <main className="min-h-screen">
         <OrderStatus order={order} raffle={raffle} />
       </main>
       <SiteFooter whatsapp={raffle.whatsapp} instagram={raffle.instagram} />
+      <WhatsAppFloating phone={raffle.whatsapp} group={raffle.whatsappGroup} />
     </>
   );
 }

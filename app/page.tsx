@@ -4,6 +4,7 @@ import SiteFooter from "@/components/site/SiteFooter";
 import RaffleView from "@/components/site/RaffleView";
 import SetupNotice from "@/components/site/SetupNotice";
 import { getGrandWinner, getPublicRaffle } from "@/lib/raffle";
+import { maskName } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -11,27 +12,17 @@ export async function generateMetadata(): Promise<Metadata> {
   try {
     const raffle = await getPublicRaffle();
     return {
-      title: `${raffle.title} | Robertão Rifas`,
+      title: `${raffle.title} | Robertão Premiações`,
       description: raffle.subtitle || raffle.description.slice(0, 160),
+      // As imagens vem de app/opengraph-image.png (convencao do Next).
       openGraph: {
         title: raffle.title,
         description: raffle.subtitle,
-        images: raffle.images.slice(0, 1),
       },
     };
   } catch {
-    return { title: "Robertão Rifas" };
+    return { title: "Robertão Premiações" };
   }
-}
-
-/** Nome parcialmente mascarado para exibicao publica. */
-function maskName(name: string) {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0];
-  return `${parts[0]} ${parts
-    .slice(1)
-    .map((p) => (p.length > 2 ? `${p[0]}${"*".repeat(Math.min(p.length - 1, 4))}` : p))
-    .join(" ")}`;
 }
 
 export default async function HomePage() {
@@ -52,7 +43,11 @@ export default async function HomePage() {
 
   return (
     <>
-      <SiteHeader instagram={raffle.instagram} />
+      <SiteHeader
+        instagram={raffle.instagram}
+        whatsapp={raffle.whatsapp}
+        whatsappGroup={raffle.whatsappGroup}
+      />
       <main className="min-h-screen">
         <RaffleView
           raffle={raffle}
@@ -60,7 +55,7 @@ export default async function HomePage() {
         />
       </main>
       <SiteFooter whatsapp={raffle.whatsapp} instagram={raffle.instagram} />
-      <WhatsAppFloating phone={raffle.whatsapp} />
+      <WhatsAppFloating phone={raffle.whatsapp} group={raffle.whatsappGroup} />
     </>
   );
 }

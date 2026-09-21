@@ -20,7 +20,11 @@ export interface Raffle {
   reservationMinutes: number;
   pixKey: string;
   pixName: string;
+  /** InfiniteTag da InfinitePay (sem o $) usada no link de pagamento. */
+  infinitepayHandle: string;
   whatsapp: string;
+  /** Convite do grupo de WhatsApp. */
+  whatsappGroup: string;
   instagram: string;
   rules: string;
   grandPrize: string;
@@ -100,6 +104,8 @@ export interface PublicRaffle extends Raffle {
     /** Null enquanto o numero nao foi sorteado no painel. */
     number: number | null;
     claimed: boolean;
+    /** Nome mascarado de quem conquistou, ou null. */
+    winner: string | null;
   }[];
 }
 

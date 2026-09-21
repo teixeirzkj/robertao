@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import type { PoolClient } from "pg";
 import { query, transaction } from "@/lib/db";
+import { maskName } from "@/lib/utils";
 import type {
   Order,
   OrderWithNumbers,
@@ -47,7 +48,9 @@ function mapRaffle(row: Row): Raffle {
     reservationMinutes: row.reservation_minutes ?? 60,
     pixKey: row.pix_key ?? "",
     pixName: row.pix_name ?? "",
+    infinitepayHandle: row.infinitepay_handle ?? "",
     whatsapp: row.whatsapp ?? "",
+    whatsappGroup: row.whatsapp_group ?? "",
     instagram: row.instagram ?? "",
     rules: row.rules ?? "",
     grandPrize: row.grand_prize ?? "",
@@ -79,7 +82,9 @@ const EDITABLE: Record<string, string> = {
   reservationMinutes: "reservation_minutes",
   pixKey: "pix_key",
   pixName: "pix_name",
+  infinitepayHandle: "infinitepay_handle",
   whatsapp: "whatsapp",
+  whatsappGroup: "whatsapp_group",
   instagram: "instagram",
   rules: "rules",
   grandPrize: "grand_prize",
@@ -182,7 +187,9 @@ export async function getPublicRaffle(): Promise<PublicRaffle> {
     getRaffle(),
     getStats(),
     query<Row>(
-      "SELECT id, label, value_cents, image, number, order_id FROM prizes ORDER BY value_cents DESC, id ASC"
+      `SELECT p.id, p.label, p.value_cents, p.image, p.number, p.order_id, o.name AS buyer_name
+       FROM prizes p LEFT JOIN orders o ON o.id = p.order_id
+       ORDER BY p.value_cents DESC, p.id ASC`
     ),
   ]);
   return {
@@ -196,6 +203,7 @@ export async function getPublicRaffle(): Promise<PublicRaffle> {
       image: p.image ?? "",
       number: p.number ?? null,
       claimed: Boolean(p.order_id),
+      winner: p.buyer_name ? maskName(p.buyer_name) : null,
     })),
   };
 }

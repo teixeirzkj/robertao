@@ -51,7 +51,7 @@ export default function AdminLogin() {
         <h1 className="mt-5 text-center font-display text-xl font-800 text-ink">
           Painel administrativo
         </h1>
-        <p className="mt-1 text-center text-sm text-ink/50">Robertão Rifas</p>
+        <p className="mt-1 text-center text-sm text-ink/50">Robertão Premiações</p>
 
         <div className="mt-7 space-y-1.5">
           <label

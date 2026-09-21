@@ -6,7 +6,7 @@ import { isAuthenticated } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Painel | Robertão Rifas",
+  title: "Painel | Robertão Premiações",
   robots: { index: false, follow: false },
 };
 

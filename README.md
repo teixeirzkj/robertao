@@ -1,4 +1,4 @@
-# Robertão Rifas
+# Robertão Premiações
 
 Site de rifa única com painel administrativo e banco de dados Postgres.
 O visitante cai direto na rifa — não existe página de catálogo.
@@ -47,10 +47,25 @@ por um menu com todas as seções.
 | Cotas | Duas consultas: o titular de um número específico, e a **maior e a menor cota vendida em um período** (ex.: até 20/12 às 18h), com os dados de quem comprou e botão para ligar. |
 | Cota vencedora | O sorteio é feito pela Loteria Federal. Busque a cota sorteada, confira o titular e registre — o site publica na hora o ganhador e o número. |
 
-## Confirmação de pagamento
+## Pagamento
 
-Hoje a confirmação é manual, na aba **Pedidos**. Para automatizar (InfinitePay
-via n8n), aponte o fluxo para o webhook:
+O comprador paga pelo **checkout da InfinitePay**. Ao clicar em *Pagar agora*, o
+servidor cria o link pela Checkout API usando a InfiniteTag configurada na aba
+**Rifa**, e manda o comprador para lá. Ao voltar, a página do pedido já
+identifica o pagamento e roda o sorteio das cotas.
+
+A InfinitePay avisa o site por dois caminhos:
+
+- **webhook** — confirma o pagamento e libera as cotas mesmo se o comprador
+  fechar o navegador;
+- **redirect** — devolve o comprador para `/pedido/[codigo]`.
+
+Se o pagamento não entrar dentro da janela de reserva (padrão 60 min), as cotas
+voltam para a rifa, a página avisa e volta para o início. Uma nova compra
+recebe outros números, porque o sorteio só acontece no momento do pagamento.
+
+Também dá para confirmar manualmente na aba **Pedidos**, e qualquer integração
+(n8n, por exemplo) pode chamar o mesmo webhook:
 
 ```
 POST /api/webhooks/pagamento
@@ -129,10 +144,13 @@ npm run dev
 
 As tabelas são criadas automaticamente na primeira consulta ao banco.
 
-> **Projeto dentro do OneDrive?** Um build antigo ou interrompido faz o Next
-> quebrar com `EINVAL ... readlink`. O `dev:local` e o `build` já contornam:
-> descartam o `.next` anterior antes de começar (só em pastas sincronizadas —
-> na Vercel o cache é preservado).
+> **Projeto dentro do OneDrive?** O sync desidrata arquivos do `.next` em
+> pleno build; o Node passa a vê-los como symlink e o Next quebra com
+> `EINVAL ... readlink`. O `dev:local` e o `build` descartam o `.next`
+> anterior antes de começar, o que resolve na maior parte das vezes. Se o
+> `npm run build` local insistir em falhar, **não é problema do código** — a
+> Vercel builda normalmente. Para conferir localmente, copie o projeto para
+> uma pasta fora do OneDrive e rode o build lá.
 
 ### Scripts
 

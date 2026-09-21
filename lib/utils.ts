@@ -21,6 +21,19 @@ export function padTicket(n: number, total: number) {
   return String(n).padStart(width, "0");
 }
 
+/**
+ * Nome para exibicao publica: primeiro nome inteiro e o resto abreviado.
+ * "Ana Paula Ribeiro" -> "Ana P**** R****"
+ */
+export function maskName(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return parts[0] ?? "";
+  return [
+    parts[0],
+    ...parts.slice(1).map((p) => (p.length > 2 ? p[0] + "*".repeat(Math.min(p.length - 1, 4)) : p)),
+  ].join(" ");
+}
+
 export function onlyDigits(value: string) {
   return value.replace(/\D+/g, "");
 }

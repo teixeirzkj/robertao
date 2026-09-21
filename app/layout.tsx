@@ -15,7 +15,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Robertão Rifas",
+  title: "Robertão Premiações",
   description:
     "Garanta suas cotas, concorra a prêmios instantâneos nas cotas premiadas e ao prêmio principal no sorteio final.",
 };

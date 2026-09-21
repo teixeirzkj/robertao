@@ -43,21 +43,21 @@ console.log("  login ok");
 
 /* ----------------------------------------------------------------- a rifa */
 
-const TOTAL_COTAS = 6250;
-const VALOR_COTA = 25; // centavos
+const TOTAL_COTAS = 80000;
+const VALOR_COTA = 8; // centavos (R$ 0,08)
 
 await api("/api/admin/raffle", {
   method: "PATCH",
   body: JSON.stringify({
     title: "R$ 2.000 no Pix",
-    subtitle: "Cotas a R$ 0,25 — concorra a R$ 2.000 e a 10 prêmios de R$ 100.",
+    subtitle: "Prêmio principal de R$ 2.000 no Pix + 10 títulos premiados de R$ 100",
     description:
       "O ganhador leva R$ 2.000 no Pix, na conta, no dia do sorteio.\n\n" +
-      "São 6.250 cotas de R$ 0,25 cada. Além do prêmio principal, 10 cotas " +
+      "São 80.000 cotas de R$ 0,08 cada. Além do prêmio principal, 10 cotas " +
       "valem R$ 100 no Pix e são pagas na hora em que aparecem para o comprador.\n\n" +
       "Quanto mais cotas você garantir, maiores as chances.",
     rules:
-      "1. O sorteio do prêmio principal é feito pela Loteria Federal, na data informada.\n" +
+      "1. O sorteio do prêmio principal é feito pela Loteria Federal, após a rifa atingir 100% das cotas vendidas.\n" +
       "2. Cada cota dá direito a um número único, sorteado pelo sistema após a confirmação do pagamento.\n" +
       "3. As 10 cotas premiadas de R$ 100 são reveladas assim que o pagamento é confirmado.\n" +
       "4. A cota vencedora e o ganhador são publicados no site logo após o sorteio.\n" +
@@ -67,15 +67,17 @@ await api("/api/admin/raffle", {
     priceCents: VALOR_COTA,
     totalNumbers: TOTAL_COTAS,
     minQuantity: 1,
-    maxQuantity: 1000,
-    quickPicks: [20, 50, 100, 200, 400, 1000],
+    maxQuantity: 5000,
+    quickPicks: [50, 100, 200, 400, 500, 1000],
     drawDate: "20/12/2026 às 20h",
     status: "ativa",
     prizeChance: 12,
     reservationMinutes: 60,
     pixKey: "rifas@robertao.com.br",
     pixName: "Roberto Alves da Silva",
-    whatsapp: "5511999990000",
+    whatsapp: "5574999238282",
+    whatsappGroup: "https://chat.whatsapp.com/Hrjk03WhV358ANrNCkqh8o",
+    infinitepayHandle: "riquelme-pereira-wkg",
     instagram: "@robertaorifas",
     grandPrize: "R$ 2.000 no Pix",
   }),
@@ -102,7 +104,7 @@ for (let i = 1; i <= QTD_PREMIOS; i++) {
     body: JSON.stringify({
       label: `R$ 100 no Pix — prêmio ${i}`,
       valueCents: 10000,
-      image: "/placeholders/pix-100.svg",
+      image: "/premios/cota-premiada.png",
     }),
   });
 }
@@ -119,11 +121,11 @@ console.log(`  ${QTD_PREMIOS} cotas premiadas de R$ 100 · cotas: ${numeros.join
 if (CRIAR_PEDIDOS) {
   // CPFs com dígito verificador válido, só para o exemplo.
   const compradores = [
-    ["Ana Paula Ribeiro", "(11) 98877-6655", "ana.ribeiro@exemplo.com", "529.982.247-25", "14/05/1991", 400, true],
-    ["Carlos Eduardo Mendes", "(21) 99123-4455", "carlos.mendes@exemplo.com", "168.995.350-09", "02/11/1985", 200, true],
-    ["Juliana Alves Costa", "(31) 98456-7788", "juliana.costa@exemplo.com", "398.261.600-08", "23/07/1994", 1000, true],
-    ["Marcos Vinícius Pereira", "(41) 99988-1122", "marcos.pereira@exemplo.com", "746.897.910-31", "09/02/1988", 100, false],
-    ["Fernanda Lima Souza", "(51) 98321-9900", "fernanda.souza@exemplo.com", "062.418.940-64", "30/09/1996", 50, false],
+    ["Ana Paula Ribeiro", "(11) 98877-6655", "ana.ribeiro@exemplo.com", "529.982.247-25", "14/05/1991", 4000, true],
+    ["Carlos Eduardo Mendes", "(21) 99123-4455", "carlos.mendes@exemplo.com", "168.995.350-09", "02/11/1985", 2500, true],
+    ["Juliana Alves Costa", "(31) 98456-7788", "juliana.costa@exemplo.com", "398.261.600-08", "23/07/1994", 5000, true],
+    ["Marcos Vinícius Pereira", "(41) 99988-1122", "marcos.pereira@exemplo.com", "746.897.910-31", "09/02/1988", 800, false],
+    ["Fernanda Lima Souza", "(51) 98321-9900", "fernanda.souza@exemplo.com", "062.418.940-64", "30/09/1996", 300, false],
   ];
 
   for (const [name, phone, email, cpf, birthdate, quantity, pagar] of compradores) {

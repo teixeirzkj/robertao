@@ -67,6 +67,8 @@ export default function RaffleTab({
         pixKey: form.pixKey,
         pixName: form.pixName,
         whatsapp: form.whatsapp,
+        whatsappGroup: form.whatsappGroup,
+        infinitepayHandle: form.infinitepayHandle,
         instagram: form.instagram,
         rules: form.rules,
         grandPrize: form.grandPrize,
@@ -292,8 +294,24 @@ export default function RaffleTab({
             label="WhatsApp"
             value={form.whatsapp}
             onChange={(e) => set("whatsapp", e.target.value)}
-            placeholder="5511999999999"
+            placeholder="5574999238282"
             hint="Com DDI e DDD, apenas números."
+          />
+          <Input
+            label="Grupo de WhatsApp"
+            value={form.whatsappGroup}
+            onChange={(e) => set("whatsappGroup", e.target.value)}
+            placeholder="https://chat.whatsapp.com/..."
+            hint="Link de convite do grupo. Vazio esconde o botão."
+            className="sm:col-span-2"
+          />
+          <Input
+            label="InfiniteTag da InfinitePay"
+            value={form.infinitepayHandle}
+            onChange={(e) => set("infinitepayHandle", e.target.value)}
+            placeholder="riquelme-pereira-wkg"
+            hint="Sem o $. É o que gera o link de pagamento do checkout."
+            className="sm:col-span-2"
           />
           <Input
             label="Instagram"

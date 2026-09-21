@@ -10,11 +10,12 @@ import {
   Check,
   Clock,
   Copy,
+  CreditCard,
   Gift,
   Loader2,
-  QrCode,
   Sparkles,
   Ticket,
+  TimerOff,
   XCircle,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
@@ -22,7 +23,7 @@ import Confetti from "@/components/ui/Confetti";
 import { formatBRL, formatNumber, onlyDigits, padTicket } from "@/lib/utils";
 import type { PublicOrder, PublicRaffle } from "@/lib/types";
 
-type Phase = "aguardando" | "sorteando" | "revelado" | "cancelado";
+type Phase = "aguardando" | "sorteando" | "revelado" | "cancelado" | "expirado";
 
 const POLL_MS = 4000;
 
@@ -40,6 +41,13 @@ export default function OrderStatus({
     return "aguardando";
   });
   const [copied, setCopied] = useState(false);
+  const [gerandoLink, setGerandoLink] = useState(false);
+  // Voltando da InfinitePay o redirect traz estes parametros na URL.
+  const [voltandoDoPagamento] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      /[?&](order_nsu|transaction_nsu|slug)=/.test(window.location.search)
+  );
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const seenPaid = useRef(initial.status === "pago");
@@ -77,9 +85,28 @@ export default function OrderStatus({
 
   useEffect(() => {
     if (phase !== "aguardando") return;
-    const id = setInterval(() => refresh(), POLL_MS);
+    const id = setInterval(() => refresh(), voltandoDoPagamento ? 2000 : POLL_MS);
     return () => clearInterval(id);
-  }, [phase, refresh]);
+  }, [phase, refresh, voltandoDoPagamento]);
+
+  /** Cria o link na InfinitePay e manda o comprador para o checkout. */
+  async function pagarOnline() {
+    setGerandoLink(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/orders/${order.code}/pagamento`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        setError(data?.error ?? "Nao foi possivel abrir o pagamento.");
+        setGerandoLink(false);
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setError("Falha de conexão. Tente novamente.");
+      setGerandoLink(false);
+    }
+  }
 
   function copyPix() {
     navigator.clipboard?.writeText(raffle.pixKey).then(() => {
@@ -136,8 +163,8 @@ export default function OrderStatus({
           >
             <div className="rounded-3xl border border-gold/30 bg-gold/5 p-5 sm:p-6">
               <div className="flex items-center gap-2 text-gold">
-                <QrCode className="size-5" />
-                <h2 className="font-display text-base font-700">Pague com Pix para liberar</h2>
+                <CreditCard className="size-5" />
+                <h2 className="font-display text-base font-700">Pague para liberar suas cotas</h2>
               </div>
 
               <p className="mt-3 text-sm leading-relaxed text-ink/65">
@@ -145,11 +172,43 @@ export default function OrderStatus({
                 elas ficam reservadas para você.
               </p>
 
+              {voltandoDoPagamento && (
+                <p className="mt-4 flex items-start gap-2 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-ink/75">
+                  <Loader2 className="mt-0.5 size-4 shrink-0 animate-spin text-gold" />
+                  Confirmando seu pagamento com a InfinitePay. Isso leva alguns segundos.
+                </p>
+              )}
+
+              <Button
+                size="lg"
+                fullWidth
+                className="mt-4"
+                loading={gerandoLink}
+                onClick={pagarOnline}
+              >
+                <CreditCard className="size-4" />
+                Pagar {formatBRL(order.totalCents)} agora
+              </Button>
+              <p className="mt-2 text-center text-[11px] text-ink/45">
+                Pix ou cartão pelo checkout da InfinitePay. Você volta para esta página com
+                suas cotas.
+              </p>
+
+              {raffle.pixKey && (
+                <div className="my-5 flex items-center gap-3">
+                  <span className="h-px flex-1 bg-ink/10" />
+                  <span className="text-[10px] uppercase tracking-[0.15em] text-ink/40">
+                    ou Pix manual
+                  </span>
+                  <span className="h-px flex-1 bg-ink/10" />
+                </div>
+              )}
+
               {raffle.pixKey ? (
                 <>
                   <button
                     onClick={copyPix}
-                    className="mt-4 flex w-full items-center justify-between gap-3 rounded-xl border border-ink/10 bg-paper-50 px-4 py-3.5 text-left transition-colors hover:border-gold/50 cursor-pointer"
+                    className="flex w-full items-center justify-between gap-3 rounded-xl border border-ink/10 bg-paper-50 px-4 py-3.5 text-left transition-colors hover:border-gold/50 cursor-pointer"
                   >
                     <span className="min-w-0 flex-1">
                       <span className="block text-[10px] uppercase tracking-[0.15em] text-ink/40">
@@ -186,7 +245,9 @@ export default function OrderStatus({
                 </p>
               </div>
 
-              {order.expiresAt && <Countdown until={order.expiresAt} />}
+              {order.expiresAt && (
+                <Countdown until={order.expiresAt} onExpirar={() => setPhase("expirado")} />
+              )}
             </div>
 
             <div className="flex flex-col gap-2 sm:flex-row">
@@ -378,6 +439,30 @@ export default function OrderStatus({
         )}
 
         {/* ------------------------------------------------------------ cancelado */}
+        {phase === "expirado" && (
+          <motion.div
+            key="expirado"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 rounded-3xl border border-ink/12 bg-white p-6 text-center sm:p-8"
+          >
+            <TimerOff className="mx-auto size-9 text-ink/35" />
+            <p className="mt-3 font-display text-lg font-700 text-ink">
+              Tempo de reserva esgotado
+            </p>
+            <p className="mt-1 text-sm text-ink/55">
+              Suas cotas voltaram para a rifa e já estão disponíveis para outras pessoas.
+              Você pode comprar de novo — os números serão outros.
+            </p>
+            <VoltarParaOInicio />
+            <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
+              <Button onClick={() => (window.location.href = "/")}>
+                Comprar novamente
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
         {phase === "cancelado" && (
           <motion.div
             key="cancelado"
@@ -407,23 +492,44 @@ export default function OrderStatus({
 }
 
 /** Tempo restante da reserva das cotas. */
-function Countdown({ until }: { until: string }) {
+/** Conta alguns segundos e leva o comprador de volta para a rifa. */
+function VoltarParaOInicio({ segundos = 8 }: { segundos?: number }) {
+  const [restam, setRestam] = useState(segundos);
+
+  useEffect(() => {
+    const id = setInterval(() => setRestam((n) => n - 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (restam <= 0) window.location.href = "/";
+  }, [restam]);
+
+  return (
+    <p className="mt-4 text-xs text-ink/40">
+      Voltando para a rifa em {Math.max(restam, 0)}s...
+    </p>
+  );
+}
+
+function Countdown({ until, onExpirar }: { until: string; onExpirar: () => void }) {
   const [left, setLeft] = useState(() => new Date(until).getTime() - Date.now());
+  const avisou = useRef(false);
 
   useEffect(() => {
     const id = setInterval(() => setLeft(new Date(until).getTime() - Date.now()), 1000);
     return () => clearInterval(id);
   }, [until]);
 
-  if (left <= 0) {
-    return (
-      <p className="mt-4 flex items-center gap-2 text-xs text-ink/45">
-        <Clock className="size-3.5" />
-        A reserva expirou, mas você ainda pode pagar — as cotas serão liberadas se ainda
-        houver disponibilidade.
-      </p>
-    );
-  }
+  // Passou da hora: as cotas voltam para a rifa e a pagina se encerra.
+  useEffect(() => {
+    if (left <= 0 && !avisou.current) {
+      avisou.current = true;
+      onExpirar();
+    }
+  }, [left, onExpirar]);
+
+  if (left <= 0) return null;
 
   const minutes = Math.floor(left / 60000);
   const seconds = Math.floor((left % 60000) / 1000);
