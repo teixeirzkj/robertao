@@ -19,7 +19,7 @@ import { CounterOnView } from "@/components/ui/Counter";
 import Gallery from "@/components/site/Gallery";
 import QuantityPicker from "@/components/site/QuantityPicker";
 import CheckoutModal from "@/components/site/CheckoutModal";
-import { cn, formatBRL, formatNumber, padTicket } from "@/lib/utils";
+import { cn, formatBRL, padTicket } from "@/lib/utils";
 import type { PublicRaffle } from "@/lib/types";
 
 const STATUS_LABEL: Record<string, { text: string; className: string }> = {
@@ -92,23 +92,13 @@ export default function RaffleView({
                 )}
               </div>
 
-              <div className="flex items-end justify-between rounded-2xl border border-white/10 bg-ink-800/60 px-5 py-4">
-                <div>
-                  <span className="text-[11px] uppercase tracking-[0.18em] text-white/40">
-                    Por cota
-                  </span>
-                  <p className="font-display text-3xl font-800 text-gradient-gold">
-                    {formatBRL(raffle.priceCents)}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span className="text-[11px] uppercase tracking-[0.18em] text-white/40">
-                    Total de cotas
-                  </span>
-                  <p className="font-display text-xl font-700 text-white">
-                    {formatNumber(raffle.totalNumbers)}
-                  </p>
-                </div>
+              <div className="rounded-2xl border border-white/10 bg-ink-800/60 px-5 py-4">
+                <span className="text-[11px] uppercase tracking-[0.18em] text-white/40">
+                  Por cota
+                </span>
+                <p className="font-display text-3xl font-800 text-gradient-gold">
+                  {formatBRL(raffle.priceCents)}
+                </p>
               </div>
 
               <div className="space-y-2">
