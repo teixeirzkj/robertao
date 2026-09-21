@@ -56,14 +56,43 @@ Pedido, cotas e prêmios são gravados na mesma transação: ou tudo entra, ou n
 
 ## Rodando localmente
 
+**Sem instalar Postgres** — o projeto traz um Postgres embutido para desenvolvimento:
+
 ```bash
 npm install
+npm run dev:local     # sobe o banco local + o site em http://localhost:3000
+npm run seed          # (opcional, em outro terminal) preenche com dados de exemplo
+```
+
+Os dados ficam em `.pgdata/` e continuam lá entre reinícios. A senha padrão do
+painel é `robertao123` — defina `ADMIN_PASSWORD` para trocar.
+
+**Com um Postgres próprio** (nuvem ou local):
+
+```bash
 cp .env.example .env.local   # preencha DATABASE_URL e ADMIN_PASSWORD
 npm run dev
 ```
 
-O site sobe em `http://localhost:3000` e o painel em `http://localhost:3000/admin`.
 As tabelas são criadas automaticamente na primeira consulta ao banco.
+
+### Páginas
+
+| Rota | O que é |
+| --- | --- |
+| `/` | A rifa — galeria, cotas premiadas, compra |
+| `/meus-numeros` | Consulta de cotas por CPF, telefone ou código |
+| `/admin` | Painel administrativo (login por senha) |
+
+### Scripts
+
+| Comando | O que faz |
+| --- | --- |
+| `npm run dev:local` | Banco local embutido + site, tudo junto |
+| `npm run dev` | Só o site (exige `DATABASE_URL`) |
+| `npm run dev:db` | Só o banco local, na porta 54321 |
+| `npm run seed` | Popula rifa, prêmios e compras de exemplo |
+| `npm run build` | Build de produção |
 
 ## Deploy na Vercel
 
