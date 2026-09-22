@@ -49,6 +49,8 @@ const nextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
       { protocol: "https", hostname: "robertao.vercel.app" },
+      { protocol: "https", hostname: "robertaopremiacoes.com.br" },
+      { protocol: "https", hostname: "www.robertaopremiacoes.com.br" },
     ],
     dangerouslyAllowSVG: false,
     contentDispositionType: "attachment",

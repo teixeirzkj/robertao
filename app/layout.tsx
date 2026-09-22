@@ -14,10 +14,38 @@ const inter = Inter({
   weight: ["400", "500", "600", "700"],
 });
 
+/**
+ * Endereço público do site.
+ *
+ * Sem isto o Next resolve a imagem de compartilhamento contra
+ * "http://localhost:3000" — ou seja, o link colado no WhatsApp viria sem
+ * imagem nenhuma, que é justamente onde a rifa circula.
+ *
+ * Em preview usa a URL daquele deploy, para o teste mostrar o que foi testado.
+ */
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_ENV === "preview" && process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "https://robertaopremiacoes.com.br");
+
+const TITULO = "Robertão Premiações";
+const DESCRICAO =
+  "Garanta suas cotas, concorra a prêmios instantâneos nas cotas premiadas e ao prêmio principal no sorteio final.";
+
 export const metadata: Metadata = {
-  title: "Robertão Premiações",
-  description:
-    "Garanta suas cotas, concorra a prêmios instantâneos nas cotas premiadas e ao prêmio principal no sorteio final.",
+  metadataBase: new URL(SITE_URL),
+  title: TITULO,
+  description: DESCRICAO,
+  openGraph: {
+    title: TITULO,
+    description: DESCRICAO,
+    url: SITE_URL,
+    siteName: TITULO,
+    locale: "pt_BR",
+    type: "website",
+  },
+  twitter: { card: "summary_large_image", title: TITULO, description: DESCRICAO },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
