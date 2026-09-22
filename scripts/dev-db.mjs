@@ -13,6 +13,7 @@ import fs from "node:fs";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 import { fromNodeSocket } from "pg-gateway/node";
 
@@ -116,7 +117,9 @@ export async function startDevDatabase({ dataDir, quiet = false } = {}) {
   };
 }
 
-// Permite rodar sozinho: `node scripts/dev-db.mjs`
-if (import.meta.url === `file://${process.argv[1]?.replace(/\\/g, "/")}`) {
+// Permite rodar sozinho: `node scripts/dev-db.mjs`.
+// No Windows o caminho vira file:///C:/... (tres barras), entao a comparacao
+// precisa passar pelo pathToFileURL em vez de montar a string na mao.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   await startDevDatabase();
 }

@@ -15,6 +15,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const PASTAS_NA_NUVEM = /OneDrive|Dropbox|Google Drive|iCloud/i;
 
@@ -42,6 +43,6 @@ export function prepararPastaDeBuild({ silencioso = false } = {}) {
 }
 
 // Permite rodar sozinho: `node scripts/prepare-next.mjs`
-if (import.meta.url === `file://${process.argv[1]?.replace(/\\/g, "/")}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   prepararPastaDeBuild();
 }

@@ -8,6 +8,7 @@
     "dev:db": "node scripts/dev-db.mjs",
     "seed": "node scripts/seed.mjs",
     "reset": "node scripts/reset-db.mjs",
+    "db:check": "node scripts/check-db.mjs",
     "prebuild": "node scripts/prepare-next.mjs",
     "build": "next build",
     "start": "next start",

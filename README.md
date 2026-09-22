@@ -162,6 +162,7 @@ As tabelas são criadas automaticamente na primeira consulta ao banco.
 | `npm run dev:db` | Só o banco local, na porta 54321 |
 | `npm run seed` | Configura a rifa e cria compras de exemplo |
 | `npm run reset -- --sim` | Apaga o banco local (`.pgdata/`) |
+| `npm run db:check -- "postgresql://..."` | Testa uma connection string antes de usá-la |
 | `npm run build` | Build de produção |
 
 ## Deploy na Vercel
