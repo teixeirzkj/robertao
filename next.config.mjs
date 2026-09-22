@@ -57,6 +57,27 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
+  /**
+   * O endereco da Vercel manda para o dominio proprio.
+   *
+   * Dois enderecos servindo o mesmo site fazem o Google dividir a relevancia
+   * entre eles. O 308 e permanente, que e o que diz ao buscador qual dos dois
+   * vale — um redirecionamento temporario nao consolidaria nada.
+   *
+   * Casa so com o host exato: as URLs de preview (robertao-<hash>-...) nao
+   * batem, entao continuam abrindo o deploy que estao testando.
+   */
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "robertao.vercel.app" }],
+        destination: "https://robertaopremiacoes.com.br/:path*",
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
