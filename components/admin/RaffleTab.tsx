@@ -20,6 +20,43 @@ function fromCents(cents: number) {
   return (cents / 100).toFixed(2).replace(".", ",");
 }
 
+/** Chave liga/desliga com o rotulo do lado, para as opcoes de sim ou nao. */
+function Interruptor({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-ink/10 bg-paper-50 px-4 py-3.5">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={`mt-0.5 flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors cursor-pointer ${
+          checked ? "bg-gold" : "bg-ink/20"
+        }`}
+      >
+        <motion.span
+          layout
+          transition={{ type: "spring", stiffness: 500, damping: 34 }}
+          className={`size-5 rounded-full bg-paper shadow ${checked ? "ml-auto" : ""}`}
+        />
+      </button>
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-ink">{label}</span>
+        {hint && <span className="mt-0.5 block text-xs leading-relaxed text-ink/50">{hint}</span>}
+      </span>
+    </label>
+  );
+}
+
 export default function RaffleTab({
   raffle,
   onSaved,
@@ -32,11 +69,18 @@ export default function RaffleTab({
   const [price, setPrice] = useState(fromCents(raffle.priceCents));
   const [quickPicks, setQuickPicks] = useState(raffle.quickPicks.join(", "));
   const [saving, setSaving] = useState(false);
+  // A trava dos premios e uma chave + um valor; zero no banco significa desligada.
+  const [travaPremios, setTravaPremios] = useState(raffle.prizeMinRevenueCents > 0);
+  const [minimoPremios, setMinimoPremios] = useState(
+    fromCents(raffle.prizeMinRevenueCents || 20000)
+  );
 
   useEffect(() => {
     setForm(raffle);
     setPrice(fromCents(raffle.priceCents));
     setQuickPicks(raffle.quickPicks.join(", "));
+    setTravaPremios(raffle.prizeMinRevenueCents > 0);
+    setMinimoPremios(fromCents(raffle.prizeMinRevenueCents || 20000));
   }, [raffle]);
 
   function set<K extends keyof Raffle>(key: K, value: Raffle[K]) {
@@ -64,6 +108,8 @@ export default function RaffleTab({
         status: form.status,
         prizeChance: form.prizeChance,
         reservationMinutes: form.reservationMinutes,
+        showProgress: form.showProgress,
+        prizeMinRevenueCents: travaPremios ? toCents(minimoPremios) : 0,
         pixKey: form.pixKey,
         pixName: form.pixName,
         whatsapp: form.whatsapp,
@@ -246,6 +292,34 @@ export default function RaffleTab({
             hint="Tempo que um pedido pendente segura as cotas antes de liberá-las."
           />
         </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <Interruptor
+            label="Mostrar a porcentagem vendida"
+            hint="Desligado, o site esconde a barra e o “x% vendido”."
+            checked={form.showProgress}
+            onChange={(v) => set("showProgress", v)}
+          />
+          <Interruptor
+            label="Segurar as cotas premiadas no começo"
+            hint="Nenhuma cota premiada sai antes da rifa arrecadar o valor abaixo."
+            checked={travaPremios}
+            onChange={setTravaPremios}
+          />
+        </div>
+
+        {travaPremios && (
+          <div className="mt-3 sm:max-w-xs">
+            <Input
+              label="Liberar as premiadas a partir de (R$)"
+              value={minimoPremios}
+              onChange={(e) => setMinimoPremios(e.target.value)}
+              hint={`Hoje equivale a ${Math.ceil(
+                toCents(minimoPremios) / Math.max(form.priceCents, 1)
+              )} cota(s) vendida(s).`}
+            />
+          </div>
+        )}
       </Card>
 
       <Card title="Sorteio e status">

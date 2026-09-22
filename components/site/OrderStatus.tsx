@@ -9,7 +9,6 @@ import {
   ArrowLeft,
   Check,
   Clock,
-  Copy,
   CreditCard,
   Gift,
   Loader2,
@@ -40,7 +39,6 @@ export default function OrderStatus({
     if (initial.status === "pago") return "revelado";
     return "aguardando";
   });
-  const [copied, setCopied] = useState(false);
   const [gerandoLink, setGerandoLink] = useState(false);
   // Voltando da InfinitePay o redirect traz estes parametros na URL.
   const [voltandoDoPagamento] = useState(
@@ -108,16 +106,9 @@ export default function OrderStatus({
     }
   }
 
-  function copyPix() {
-    navigator.clipboard?.writeText(raffle.pixKey).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
-
   const whatsUrl = raffle.whatsapp
     ? `https://wa.me/${onlyDigits(raffle.whatsapp)}?text=${encodeURIComponent(
-        `Olá! Fiz o pedido ${order.code} de ${order.quantity} cota(s) e estou enviando o comprovante.`
+        `Olá! Preciso de ajuda com o pedido ${order.code} de ${order.quantity} cota(s).`
       )}`
     : null;
 
@@ -194,72 +185,12 @@ export default function OrderStatus({
                 suas cotas.
               </p>
 
-              {raffle.pixKey && (
-                <div className="my-5 flex items-center gap-3">
-                  <span className="h-px flex-1 bg-ink/10" />
-                  <span className="text-[10px] uppercase tracking-[0.15em] text-ink/40">
-                    ou Pix manual
-                  </span>
-                  <span className="h-px flex-1 bg-ink/10" />
-                </div>
-              )}
-
-              {raffle.pixKey ? (
-                <>
-                  <button
-                    onClick={copyPix}
-                    className="flex w-full items-center justify-between gap-3 rounded-xl border border-ink/10 bg-paper-50 px-4 py-3.5 text-left transition-colors hover:border-gold/50 cursor-pointer"
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[10px] uppercase tracking-[0.15em] text-ink/40">
-                        Chave Pix
-                      </span>
-                      <span className="mt-0.5 block truncate font-mono text-sm text-ink/85">
-                        {raffle.pixKey}
-                      </span>
-                    </span>
-                    {copied ? (
-                      <span className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-gold">
-                        <Check className="size-4" /> copiado
-                      </span>
-                    ) : (
-                      <Copy className="size-4 shrink-0 text-ink/50" />
-                    )}
-                  </button>
-                  {raffle.pixName && (
-                    <p className="mt-2 text-xs text-ink/45">Favorecido: {raffle.pixName}</p>
-                  )}
-                </>
-              ) : (
-                <p className="mt-4 rounded-xl border border-ink/10 bg-paper-50 px-4 py-3 text-sm text-ink/55">
-                  A chave Pix ainda não foi configurada. Fale com a organização para concluir o
-                  pagamento.
-                </p>
-              )}
-
-              <div className="mt-4 rounded-xl border border-ink/10 bg-paper-50 px-4 py-3">
-                <p className="text-xs leading-relaxed text-ink/55">
-                  Após pagar, envie o comprovante informando o código{" "}
-                  <strong className="text-gold">{order.code}</strong>. A confirmação libera as
-                  cotas automaticamente nesta página.
-                </p>
-              </div>
-
               {order.expiresAt && (
                 <Countdown until={order.expiresAt} onExpirar={() => setPhase("expirado")} />
               )}
             </div>
 
             <div className="flex flex-col gap-2 sm:flex-row">
-              {whatsUrl && (
-                <Button
-                  variant="outline"
-                  fullWidth
-                  onClick={() => window.open(whatsUrl, "_blank")}
-                >
-                  Enviar comprovante
-                </Button>
-              )}
               <Button
                 variant="dark"
                 fullWidth

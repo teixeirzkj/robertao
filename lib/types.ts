@@ -18,6 +18,10 @@ export interface Raffle {
   prizeChance: number;
   /** Por quantos minutos um pedido pendente segura as cotas reservadas. */
   reservationMinutes: number;
+  /** Exibir a barra de porcentagem vendida na pagina da rifa. */
+  showProgress: boolean;
+  /** Cotas premiadas so comecam a sair depois deste valor arrecadado (0 = sem trava). */
+  prizeMinRevenueCents: number;
   pixKey: string;
   pixName: string;
   /** InfiniteTag da InfinitePay (sem o $) usada no link de pagamento. */

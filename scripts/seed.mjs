@@ -73,8 +73,12 @@ await api("/api/admin/raffle", {
     status: "ativa",
     prizeChance: 12,
     reservationMinutes: 60,
-    pixKey: "rifas@robertao.com.br",
-    pixName: "Roberto Alves da Silva",
+    showProgress: true,
+    // Cotas premiadas so comecam a sair depois de R$ 200 arrecadados.
+    prizeMinRevenueCents: 20000,
+    // O pagamento e todo pelo checkout da InfinitePay; nao ha Pix manual.
+    pixKey: "",
+    pixName: "",
     whatsapp: "5574999238282",
     whatsappGroup: "https://chat.whatsapp.com/Hrjk03WhV358ANrNCkqh8o",
     infinitepayHandle: "riquelme-pereira-wkg",

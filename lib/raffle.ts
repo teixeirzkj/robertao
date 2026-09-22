@@ -46,6 +46,8 @@ function mapRaffle(row: Row): Raffle {
     status: row.status,
     prizeChance: row.prize_chance,
     reservationMinutes: row.reservation_minutes ?? 60,
+    showProgress: row.show_progress ?? true,
+    prizeMinRevenueCents: row.prize_min_revenue_cents ?? 0,
     pixKey: row.pix_key ?? "",
     pixName: row.pix_name ?? "",
     infinitepayHandle: row.infinitepay_handle ?? "",
@@ -80,6 +82,8 @@ const EDITABLE: Record<string, string> = {
   status: "status",
   prizeChance: "prize_chance",
   reservationMinutes: "reservation_minutes",
+  showProgress: "show_progress",
+  prizeMinRevenueCents: "prize_min_revenue_cents",
   pixKey: "pix_key",
   pixName: "pix_name",
   infinitepayHandle: "infinitepay_handle",
@@ -480,7 +484,13 @@ async function drawNumbers(
   const soldRatio = raffle.totalNumbers ? sold / raffle.totalNumbers : 0;
   const base = Math.min(Math.max(raffle.prizeChance, 0), 100) / 100;
   const ramp = Math.pow(Math.min(soldRatio / 0.75, 1), 1.5);
-  const release = base + (1 - base) * ramp;
+
+  // Antes do piso de arrecadacao nenhuma cota premiada sai: a rifa nao pode
+  // pagar os premios com o que ainda nao entrou. `sold` ja inclui estas cotas,
+  // entao o piso vale a partir do que a rifa tem em caixa agora.
+  const arrecadado = sold * raffle.priceCents;
+  const seguraPremios = raffle.prizeMinRevenueCents > 0 && arrecadado < raffle.prizeMinRevenueCents;
+  const release = seguraPremios ? 0 : base + (1 - base) * ramp;
 
   const chosen: number[] = [];
   const remainingPrizes = [...prizeNumbers];

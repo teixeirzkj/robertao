@@ -37,7 +37,10 @@ const INT_FIELDS = [
   "maxQuantity",
   "prizeChance",
   "reservationMinutes",
+  "prizeMinRevenueCents",
 ] as const;
+
+const BOOL_FIELDS = ["showProgress"] as const;
 
 export async function PATCH(req: Request) {
   const denied = await requireAdmin();
@@ -55,6 +58,15 @@ export async function PATCH(req: Request) {
       const value = Number(body[field]);
       if (!Number.isFinite(value)) return fail("Valor invalido em " + field + ".");
       patch[field] = Math.round(value);
+    }
+
+    for (const field of BOOL_FIELDS) {
+      if (body[field] !== undefined) patch[field] = Boolean(body[field]);
+    }
+
+    // Zero desliga a trava; negativo nao faz sentido.
+    if (patch.prizeMinRevenueCents !== undefined) {
+      patch.prizeMinRevenueCents = Math.max(patch.prizeMinRevenueCents as number, 0);
     }
 
     if (patch.priceCents !== undefined && (patch.priceCents as number) < 1) {

@@ -118,12 +118,16 @@ export default function RaffleView({
           </a>
         </div>
 
-        {/* progresso */}
+        {/* progresso — a porcentagem e opcional, ligada no admin */}
         <div className="mt-4 space-y-1.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-ink/55">
-              <CounterOnView value={Math.round(raffle.stats.soldPercent)} suffix="%" /> vendido
-            </span>
+            {raffle.showProgress ? (
+              <span className="text-ink/55">
+                <CounterOnView value={Math.round(raffle.stats.soldPercent)} suffix="%" /> vendido
+              </span>
+            ) : (
+              <span />
+            )}
             {raffle.drawDate && (
               <span className="inline-flex items-center gap-1.5 text-ink/50">
                 <CalendarDays className="size-3" />
@@ -131,7 +135,9 @@ export default function RaffleView({
               </span>
             )}
           </div>
-          <ProgressBar percent={Math.min(raffle.stats.soldPercent, 100)} />
+          {raffle.showProgress && (
+            <ProgressBar percent={Math.min(raffle.stats.soldPercent, 100)} />
+          )}
         </div>
 
         {/* ------------------------------------------------------- compra */}

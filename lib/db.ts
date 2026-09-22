@@ -159,6 +159,10 @@ ALTER TABLE raffle ADD COLUMN IF NOT EXISTS reservation_minutes INTEGER NOT NULL
 ALTER TABLE raffle ADD COLUMN IF NOT EXISTS infinitepay_handle TEXT NOT NULL DEFAULT '';
 -- Convite do grupo de WhatsApp (https://chat.whatsapp.com/...).
 ALTER TABLE raffle ADD COLUMN IF NOT EXISTS whatsapp_group TEXT NOT NULL DEFAULT '';
+-- Mostrar ou nao a barra de porcentagem vendida na pagina da rifa.
+ALTER TABLE raffle ADD COLUMN IF NOT EXISTS show_progress BOOLEAN NOT NULL DEFAULT TRUE;
+-- Segura as cotas premiadas ate a rifa arrecadar este valor (0 = sem trava).
+ALTER TABLE raffle ADD COLUMN IF NOT EXISTS prize_min_revenue_cents INTEGER NOT NULL DEFAULT 0;
 
 -- Consultas de maior/menor cota por periodo.
 CREATE INDEX IF NOT EXISTS tickets_created_idx ON tickets (created_at);
