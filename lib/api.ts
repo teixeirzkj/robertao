@@ -14,7 +14,8 @@ export function fail(message: string, status = 400) {
 export function handleError(err: unknown) {
   if (err instanceof RaffleError) return fail(err.message, err.status);
   const message = err instanceof Error ? err.message : "Erro inesperado.";
-  if (/DATABASE_URL/.test(message)) return fail(message, 503);
+  // erros de configuracao do banco vao inteiros para a tela, sao acionaveis
+  if (/DATABASE_URL|connection string de Postgres/.test(message)) return fail(message, 503);
   console.error("[api]", err);
   return fail("Erro ao processar a solicitacao. Tente novamente.", 500);
 }

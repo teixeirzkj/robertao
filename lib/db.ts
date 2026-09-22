@@ -13,17 +13,49 @@ declare global {
   var __rifaSchemaReady: Promise<void> | undefined;
 }
 
+/**
+ * Nomes que os provedores usam para a connection string, em ordem de
+ * preferência. A Vercel deixa escolher um prefixo ao conectar o banco
+ * (STORAGE_URL, por exemplo), então aceitamos os mais comuns.
+ */
+const VARIAVEIS_DE_CONEXAO = [
+  "DATABASE_URL",
+  "POSTGRES_URL",
+  "STORAGE_URL",
+  "POSTGRES_PRISMA_URL",
+  "DATABASE_POSTGRES_URL",
+  "POSTGRES_URL_NON_POOLING",
+  "DATABASE_URL_UNPOOLED",
+];
+
 function connectionString() {
-  const url =
-    process.env.DATABASE_URL ||
-    process.env.POSTGRES_URL ||
-    process.env.POSTGRES_PRISMA_URL ||
-    process.env.DATABASE_POSTGRES_URL;
+  let url: string | undefined;
+  let origem = "";
+  for (const nome of VARIAVEIS_DE_CONEXAO) {
+    const valor = process.env[nome];
+    if (valor) {
+      url = valor;
+      origem = nome;
+      break;
+    }
+  }
+
   if (!url) {
     throw new Error(
       "DATABASE_URL não configurada. Crie um Postgres (Neon/Vercel/Supabase) e defina a variável de ambiente."
     );
   }
+
+  // O driver `pg` fala o protocolo do Postgres. A URL do Prisma Accelerate
+  // (prisma+postgres://) é um proxy HTTP e não serve aqui.
+  if (!/^postgres(ql)?:\/\//i.test(url)) {
+    const esquema = url.split("://")[0];
+    throw new Error(
+      `A variável ${origem} não é uma connection string de Postgres (começa com "${esquema}://"). ` +
+        "Use a URL direta do banco, no formato postgresql://usuario:senha@host:porta/banco."
+    );
+  }
+
   return url;
 }
 
