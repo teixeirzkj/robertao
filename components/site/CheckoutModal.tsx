@@ -11,6 +11,7 @@ import {
   formatCPF,
   formatNumber,
   formatPhone,
+  isValidPhone,
   isValidCPF,
   isValidEmail,
   onlyDigits,
@@ -78,7 +79,7 @@ export default function CheckoutModal({
     const next: Partial<Record<keyof FormState, string>> = {};
     const name = form.name.trim().replace(/\s+/g, " ");
     if (name.length < 5 || !name.includes(" ")) next.name = "Informe seu nome completo.";
-    if (onlyDigits(form.phone).length < 10) next.phone = "Telefone com DDD é obrigatório.";
+    if (!isValidPhone(form.phone)) next.phone = "Informe um celular com DDD, ex.: (74) 99923-8282.";
     if (!isValidEmail(form.email)) next.email = "E-mail inválido.";
     if (!isValidCPF(form.cpf)) next.cpf = "CPF inválido.";
     if (!parseBirthdate(form.birthdate))

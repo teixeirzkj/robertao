@@ -1,5 +1,6 @@
 import { RaffleError } from "@/lib/raffle";
 import type { Order, Raffle } from "@/lib/types";
+import { isValidPhone, normalizePhone } from "@/lib/utils";
 
 /**
  * Link de pagamento da InfinitePay (Checkout API).
@@ -105,6 +106,15 @@ export async function criarLinkDePagamento({
     );
   }
 
+  // Pedidos antigos podem ter telefone que a InfinitePay nao aceita.
+  if (!isValidPhone(order.phone)) {
+    throw new RaffleError(
+      `O telefone do pedido (${order.phone}) nao e um celular valido e o pagamento online o exige. ` +
+        "Refaca o pedido com um celular com DDD, ou pague pelo Pix e envie o comprovante.",
+      400
+    );
+  }
+
   const webhookUrl = new URL("/api/webhooks/pagamento", baseUrl);
   // A InfinitePay nao envia headers nossos, entao o segredo vai na query.
   if (process.env.WEBHOOK_SECRET) {
@@ -119,7 +129,7 @@ export async function criarLinkDePagamento({
     customer: {
       name: order.name,
       email: order.email,
-      phone_number: order.phone.replace(/\D+/g, ""),
+      phone_number: normalizePhone(order.phone),
     },
     items: [
       {

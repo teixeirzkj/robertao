@@ -385,7 +385,9 @@ function MenorEMaiorTitulo({ totalNumbers }: { totalNumbers: number }) {
   const [dados, setDados] = useState<{
     count: number;
     lowest: number | null;
+    lowestName: string | null;
     highest: number | null;
+    highestName: string | null;
   } | null>(null);
   const [carregando, setCarregando] = useState(false);
 
@@ -444,6 +446,7 @@ function MenorEMaiorTitulo({ totalNumbers }: { totalNumbers: number }) {
                 <p className="mt-1 font-mono text-xl font-bold tabular-nums text-ink">
                   {padTicket(dados.lowest!, totalNumbers)}
                 </p>
+                <p className="mt-1 truncate text-[11px] text-ink/55">{dados.lowestName}</p>
               </div>
               <div className="px-4 py-4 text-center">
                 <p className="text-[10px] uppercase tracking-[0.12em] text-ink/45">
@@ -452,10 +455,8 @@ function MenorEMaiorTitulo({ totalNumbers }: { totalNumbers: number }) {
                 <p className="mt-1 font-mono text-xl font-bold tabular-nums text-gradient-gold">
                   {padTicket(dados.highest!, totalNumbers)}
                 </p>
+                <p className="mt-1 truncate text-[11px] text-ink/55">{dados.highestName}</p>
               </div>
-              <p className="col-span-2 border-t border-ink/8 py-2.5 text-center text-[11px] text-ink/45">
-                {formatNumber(dados.count)} cota(s) já vendida(s)
-              </p>
             </div>
           )}
         </motion.div>

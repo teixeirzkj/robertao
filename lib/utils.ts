@@ -46,8 +46,32 @@ export function formatCPF(value: string) {
     .replace(/\.(\d{3})(\d{1,2})$/, ".$1-$2");
 }
 
+/**
+ * Deixa so os digitos do celular brasileiro (DDD + 9 digitos).
+ *
+ * Quem digitava o 55 do pais antes do DDD acabava com "(55) 74992-6252": o 55
+ * virava DDD e o fim do numero era cortado. Aqui o codigo do pais sai antes do
+ * corte, entao o numero sobrevive inteiro.
+ */
+export function normalizePhone(value: string) {
+  let d = onlyDigits(value);
+  if (d.length >= 12 && d.startsWith("55")) d = d.slice(2);
+  return d.slice(0, 11);
+}
+
+/**
+ * Celular valido: DDD (sem zero) + 9 + 8 digitos.
+ *
+ * A exigencia vem do checkout da InfinitePay, que recusa qualquer outra coisa
+ * — inclusive telefone fixo de 10 digitos. Melhor barrar no formulario do que
+ * deixar a pessoa descobrir so na hora de pagar.
+ */
+export function isValidPhone(value: string) {
+  return /^[1-9][1-9]9[0-9]{8}$/.test(normalizePhone(value));
+}
+
 export function formatPhone(value: string) {
-  const d = onlyDigits(value).slice(0, 11);
+  const d = normalizePhone(value);
   if (d.length <= 10) {
     return d.replace(/^(\d{2})(\d)/, "($1) $2").replace(/(\d{4})(\d{1,4})$/, "$1-$2");
   }

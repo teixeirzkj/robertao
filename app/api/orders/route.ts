@@ -5,6 +5,8 @@ import {
   formatPhone,
   isValidCPF,
   isValidEmail,
+  isValidPhone,
+  normalizePhone,
   onlyDigits,
   parseBirthdate,
 } from "@/lib/utils";
@@ -21,9 +23,11 @@ export async function POST(req: Request) {
       return fail("Informe seu nome completo.");
     }
 
-    const phoneDigits = onlyDigits(String(body.phone ?? ""));
-    if (phoneDigits.length < 10 || phoneDigits.length > 11) {
-      return fail("Informe um telefone valido com DDD.");
+    // Precisa ser celular: o checkout da InfinitePay recusa fixo e recusa o
+    // numero com o 55 do pais no lugar do DDD.
+    const phoneDigits = normalizePhone(String(body.phone ?? ""));
+    if (!isValidPhone(phoneDigits)) {
+      return fail("Informe um celular valido com DDD, ex.: (74) 99923-8282.");
     }
 
     const email = String(body.email ?? "").trim().toLowerCase();
