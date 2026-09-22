@@ -36,12 +36,20 @@ function explicarRecusa(status: number, corpo: unknown, texto = ""): string {
     );
   }
 
+  // A InfinitePay agrupa os erros por campo: { errors: { items: [...], customer: [...] } }
+  const porCampo: string[] = [];
+  if (c.errors && typeof c.errors === "object") {
+    for (const [campo, valor] of Object.entries(c.errors as Record<string, unknown>)) {
+      const lista = Array.isArray(valor) ? valor : [valor];
+      for (const v of lista) porCampo.push(`${campo}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+    }
+  }
   const itens: string[] = Array.isArray(c.errors?.items) ? c.errors.items : [];
   if (itens.some((e) => /total price must be greater/i.test(e))) {
     return `O pagamento online exige no mínimo ${(MINIMO_CENTAVOS / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}. Escolha mais cotas.`;
   }
 
-  const detalhe = [c.message, ...itens].filter(Boolean).join(" — ");
+  const detalhe = [c.message, ...porCampo].filter(Boolean).join(" — ");
   if (detalhe) return `A InfinitePay recusou o pagamento: ${detalhe}`;
 
   // Sem JSON: mostra o inicio do corpo, que e o unico indicio do motivo.
