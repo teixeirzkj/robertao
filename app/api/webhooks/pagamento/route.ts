@@ -4,6 +4,7 @@ import { fail, handleError, ok, readJson } from "@/lib/api";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const preferredRegion = "gru1";
 
 /**
  * Confirmação de pagamento vinda de fora (InfinitePay via n8n, por exemplo).

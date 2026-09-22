@@ -4,6 +4,9 @@ import { fail, handleError, ok } from "@/lib/api";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// A InfinitePay recusa chamadas vindas de fora do Brasil, e por padrao a Vercel
+// roda as funcoes nos EUA. gru1 = Sao Paulo.
+export const preferredRegion = "gru1";
 
 type Ctx = { params: Promise<{ code: string }> };
 
