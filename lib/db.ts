@@ -167,6 +167,16 @@ ALTER TABLE raffle ADD COLUMN IF NOT EXISTS prize_min_revenue_cents INTEGER NOT 
 -- Consultas de maior/menor cota por periodo.
 CREATE INDEX IF NOT EXISTS tickets_created_idx ON tickets (created_at);
 CREATE INDEX IF NOT EXISTS orders_status_idx ON orders (status, created_at DESC);
+
+-- Limite de requisicoes por IP. Fica no banco de proposito: na Vercel cada
+-- requisicao pode cair em uma instancia diferente, entao um contador em
+-- memoria so protege a instancia que ele esta.
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key        TEXT PRIMARY KEY,
+  count      INTEGER NOT NULL DEFAULT 0,
+  reset_at   TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS rate_limits_reset_idx ON rate_limits (reset_at);
 `;
 
 export async function ensureSchema() {

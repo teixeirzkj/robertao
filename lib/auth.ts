@@ -3,48 +3,98 @@ import { cookies } from "next/headers";
 
 export const ADMIN_COOKIE = "rifa_admin";
 const MAX_AGE = 60 * 60 * 12; // 12 horas
+const PRODUCAO = process.env.NODE_ENV === "production";
 
-function secret() {
-  return (
-    process.env.ADMIN_SESSION_SECRET ||
-    process.env.ADMIN_PASSWORD ||
-    "robertao-rifas-dev-secret"
-  );
+/**
+ * Segredo que assina o cookie de sessao.
+ *
+ * Em producao nao ha valor padrao de proposito: um padrao conhecido deixaria
+ * qualquer pessoa forjar um cookie de admin. Sem a variavel, o painel fica
+ * inacessivel — que e o modo certo de falhar.
+ */
+function secret(): string | null {
+  const s = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD;
+  if (s) return s;
+  return PRODUCAO ? null : "segredo-de-desenvolvimento";
 }
 
-export function adminPassword() {
-  return process.env.ADMIN_PASSWORD || "robertao123";
+export function adminPassword(): string | null {
+  const p = process.env.ADMIN_PASSWORD;
+  if (p) return p;
+  return PRODUCAO ? null : "robertao123";
 }
 
-function sign(payload: string) {
-  return crypto.createHmac("sha256", secret()).update(payload).digest("base64url");
+/**
+ * Impressao digital da senha atual, embutida no cookie.
+ *
+ * E o que faz trocar a senha derrubar quem ja estava logado: o cookie antigo
+ * carrega a digital da senha velha e para de conferir. Sem isso, uma sessao
+ * aberta sobreviveria 12 horas a troca de senha.
+ */
+function digitalDaSenha(): string {
+  const p = adminPassword() ?? "";
+  return crypto.createHash("sha256").update(p).digest("base64url").slice(0, 12);
 }
 
-export function createToken() {
+function sign(payload: string): string | null {
+  const s = secret();
+  if (!s) return null;
+  return crypto.createHmac("sha256", s).update(payload).digest("base64url");
+}
+
+export function createToken(): string | null {
   const exp = Date.now() + MAX_AGE * 1000;
-  const payload = `admin.${exp}`;
-  return `${payload}.${sign(payload)}`;
+  const payload = `admin.${exp}.${digitalDaSenha()}`;
+  const mac = sign(payload);
+  return mac ? `${payload}.${mac}` : null;
 }
 
 export function verifyToken(token: string | undefined): boolean {
   if (!token) return false;
   const parts = token.split(".");
-  if (parts.length !== 3) return false;
-  const [role, exp, mac] = parts;
+  if (parts.length !== 4) return false;
+  const [role, exp, digital, mac] = parts;
   if (role !== "admin") return false;
-  const expected = sign(`${role}.${exp}`);
+  if (digital !== digitalDaSenha()) return false; // senha trocou: sessao morre
+
+  const expected = sign(`${role}.${exp}.${digital}`);
+  if (!expected) return false;
   const a = Buffer.from(mac);
   const b = Buffer.from(expected);
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return false;
   return Number(exp) > Date.now();
 }
 
-/** Comparação de senha em tempo constante. */
-export function checkPassword(input: string) {
+/** Comparacao de senha em tempo constante. */
+export function checkPassword(input: string): boolean {
   const expected = adminPassword();
-  const a = Buffer.from(crypto.createHash("sha256").update(input).digest());
-  const b = Buffer.from(crypto.createHash("sha256").update(expected).digest());
+  if (!expected) return false; // sem ADMIN_PASSWORD em producao, ninguem entra
+  const a = crypto.createHash("sha256").update(input).digest();
+  const b = crypto.createHash("sha256").update(expected).digest();
   return crypto.timingSafeEqual(a, b);
+}
+
+/**
+ * Token de webhook valido para um unico pedido.
+ *
+ * A InfinitePay nao envia headers nossos, entao o que autentica a chamada tem
+ * que viajar na URL — e URL aparece em log de acesso, no painel do gateway e
+ * no historico de quem abrir o link. Mandando um HMAC do codigo do pedido em
+ * vez do WEBHOOK_SECRET, um link vazado so serve para aquele pedido (que ja
+ * confere o valor pago e e idempotente), nunca para confirmar outros.
+ */
+export function webhookToken(code: string): string | null {
+  const s = process.env.WEBHOOK_SECRET;
+  if (!s) return null;
+  return crypto.createHmac("sha256", s).update(`pedido:${code}`).digest("base64url");
+}
+
+export function verifyWebhookToken(code: string, provided: string): boolean {
+  const expected = webhookToken(code);
+  if (!expected || !provided) return false;
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
 export async function isAuthenticated() {
@@ -54,8 +104,10 @@ export async function isAuthenticated() {
 
 export const cookieOptions = {
   httpOnly: true,
-  sameSite: "lax" as const,
-  secure: process.env.NODE_ENV === "production",
+  // "strict" porque nada no site legitimamente chega ao painel vindo de fora;
+  // isso fecha a porta para CSRF nas rotas de admin.
+  sameSite: "strict" as const,
+  secure: PRODUCAO,
   path: "/",
   maxAge: MAX_AGE,
 };

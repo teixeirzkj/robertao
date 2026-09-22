@@ -1,6 +1,7 @@
 import { RaffleError } from "@/lib/raffle";
 import type { Order, Raffle } from "@/lib/types";
 import { isValidPhone, normalizePhone } from "@/lib/utils";
+import { webhookToken } from "@/lib/auth";
 
 /**
  * Link de pagamento da InfinitePay (Checkout API).
@@ -116,10 +117,10 @@ export async function criarLinkDePagamento({
   }
 
   const webhookUrl = new URL("/api/webhooks/pagamento", baseUrl);
-  // A InfinitePay nao envia headers nossos, entao o segredo vai na query.
-  if (process.env.WEBHOOK_SECRET) {
-    webhookUrl.searchParams.set("secret", process.env.WEBHOOK_SECRET);
-  }
+  // Vai um token derivado deste pedido, nunca o WEBHOOK_SECRET em si: a URL
+  // fica gravada em logs e no painel do gateway.
+  const token = webhookToken(order.code);
+  if (token) webhookUrl.searchParams.set("t", token);
 
   const payload = {
     handle,

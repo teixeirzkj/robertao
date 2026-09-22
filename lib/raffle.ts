@@ -610,11 +610,19 @@ async function releaseTickets(client: PoolClient, orderId: string) {
   await client.query("DELETE FROM tickets WHERE order_id = $1", [orderId]);
 }
 
-export async function setOrderStatus(id: string, status: string): Promise<OrderWithNumbers> {
+export async function setOrderStatus(
+  idOrCode: string,
+  status: string
+): Promise<OrderWithNumbers> {
   if (!["pendente", "pago", "cancelado"].includes(status)) {
     throw new RaffleError("Status invalido.");
   }
-  if (status === "pago") return confirmPayment(id);
+  if (status === "pago") return confirmPayment(idOrCode);
+
+  // Aceita o codigo do pedido tambem, como o confirmPayment ja fazia.
+  const alvo = await getOrder(idOrCode);
+  if (!alvo) throw new RaffleError("Pedido nao encontrado", 404);
+  const id = alvo.id;
 
   await transaction(async (client) => {
     await client.query("SELECT pg_advisory_xact_lock($1)", [TICKET_LOCK]);
@@ -684,16 +692,15 @@ export async function getOrder(idOrCode: string): Promise<OrderWithNumbers | nul
 }
 
 /** Versão do pedido exibida ao comprador, sem CPF nem e-mail. */
-export async function getPublicOrder(code: string): Promise<PublicOrder | null> {
-  const order = await getOrder(code);
-  if (!order) return null;
-  const raffle = await getRaffle();
-  const expiresAt =
-    order.status === "pendente"
-      ? new Date(
-          new Date(order.createdAt).getTime() + raffle.reservationMinutes * 60_000
-        ).toISOString()
-      : null;
+/**
+ * Versao do pedido que pode sair do servidor.
+ *
+ * CPF, telefone, e-mail e data de nascimento ficam de fora: a tela do
+ * comprador nunca precisou deles, e quem chega ao pedido pode ser so alguem
+ * com o codigo em maos (print no WhatsApp) ou tentando CPFs na consulta
+ * publica. Quem precisa desses dados e o painel, que exige sessao.
+ */
+export function toPublicOrder(order: OrderWithNumbers, reservationMinutes: number): PublicOrder {
   return {
     code: order.code,
     name: order.name,
@@ -704,8 +711,26 @@ export async function getPublicOrder(code: string): Promise<PublicOrder | null> 
     paidAt: order.paidAt,
     numbers: order.numbers,
     prizes: order.prizes,
-    expiresAt,
+    expiresAt:
+      order.status === "pendente"
+        ? new Date(
+            new Date(order.createdAt).getTime() + reservationMinutes * 60_000
+          ).toISOString()
+        : null,
   };
+}
+
+export async function getPublicOrder(code: string): Promise<PublicOrder | null> {
+  const order = await getOrder(code);
+  if (!order) return null;
+  const raffle = await getRaffle();
+  return toPublicOrder(order, raffle.reservationMinutes);
+}
+
+/** Consulta publica por CPF ou telefone, ja sem os dados pessoais. */
+export async function findPublicOrdersByDocument(value: string): Promise<PublicOrder[]> {
+  const [orders, raffle] = await Promise.all([findOrdersByDocument(value), getRaffle()]);
+  return orders.map((o) => toPublicOrder(o, raffle.reservationMinutes));
 }
 
 export async function listOrders(opts: {

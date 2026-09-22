@@ -1,5 +1,6 @@
-import { createOrder } from "@/lib/raffle";
+import { createOrder, getRaffle, toPublicOrder } from "@/lib/raffle";
 import { fail, handleError, ok, readJson } from "@/lib/api";
+import { limitarOu429 } from "@/lib/rate-limit";
 import {
   formatCPF,
   formatPhone,
@@ -15,6 +16,11 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  // Cada pedido reserva cotas por 1 hora; sem teto, um script esgotaria a
+  // rifa inteira sem pagar nada.
+  const bloqueado = await limitarOu429(req, "pedido", 10, 10 * 60);
+  if (bloqueado) return bloqueado;
+
   try {
     const body = await readJson(req);
 
@@ -44,6 +50,7 @@ export async function POST(req: Request) {
       return fail("Quantidade de cotas invalida.");
     }
 
+    const raffle = await getRaffle();
     const order = await createOrder({
       name,
       phone: formatPhone(phoneDigits),
@@ -53,7 +60,10 @@ export async function POST(req: Request) {
       quantity,
     });
 
-    return ok(order, 201);
+    // Devolve so o que a tela usa. O eco do CPF, e-mail e telefone que a
+    // pessoa acabou de digitar nao serve para nada e ainda passa por cache,
+    // extensao de navegador e ferramenta de rede pelo caminho.
+    return ok(toPublicOrder(order, raffle.reservationMinutes), 201);
   } catch (err) {
     return handleError(err);
   }

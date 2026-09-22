@@ -150,7 +150,7 @@ if (CRIAR_PEDIDOS) {
     }
 
     // Confirma o pagamento: é aqui que as cotas são sorteadas.
-    const pago = await api(`/api/admin/orders/${pedido.id}`, {
+    const pago = await api(`/api/admin/orders/${pedido.code}`, {
       method: "PATCH",
       body: JSON.stringify({ status: "pago" }),
     });

@@ -1,6 +1,7 @@
 import { getOrder, getRaffle } from "@/lib/raffle";
 import { criarLinkDePagamento } from "@/lib/infinitepay";
 import { fail, handleError, ok } from "@/lib/api";
+import { limitarOu429 } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +22,10 @@ function baseUrl(req: Request) {
 
 /** Cria o link de pagamento da InfinitePay para este pedido. */
 export async function POST(req: Request, { params }: Ctx) {
+  // Cada chamada cria um link na InfinitePay; nao ha porque permitir rajada.
+  const bloqueado = await limitarOu429(req, "pagamento", 20, 10 * 60);
+  if (bloqueado) return bloqueado;
+
   try {
     const { code } = await params;
     const order = await getOrder(code.trim());

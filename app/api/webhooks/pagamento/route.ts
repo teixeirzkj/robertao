@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { confirmPayment, getOrder } from "@/lib/raffle";
 import { fail, handleError, ok, readJson } from "@/lib/api";
+import { verifyWebhookToken } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,22 +14,26 @@ export const preferredRegion = "gru1";
  * cotas são sorteadas e gravadas. É idempotente: reenviar o mesmo pedido não
  * gera cotas novas, então retentativas do n8n são seguras.
  *
- * Requer o segredo em `WEBHOOK_SECRET`, enviado no header
- * `x-webhook-secret` ou no campo `secret` do corpo.
+ * Autenticacao: a InfinitePay traz na URL um token proprio do pedido (`t`),
+ * derivado do WEBHOOK_SECRET. Integracoes nossas (n8n) podem usar o segredo
+ * direto, mas so pelo header `x-webhook-secret` ou pelo corpo.
  *
  *   POST /api/webhooks/pagamento
  *   { "code": "RBAB12CD", "status": "paid" }
  */
-function authorized(req: Request, body: Record<string, unknown>) {
+function authorized(req: Request, body: Record<string, unknown>, code: string) {
   const expected = process.env.WEBHOOK_SECRET;
   if (!expected) return false;
-  const provided =
-    req.headers.get("x-webhook-secret") ||
-    new URL(req.url).searchParams.get("secret") ||
-    String(body.secret ?? "");
+
+  // Token proprio deste pedido, que e o que a InfinitePay recebe na URL.
+  const token = new URL(req.url).searchParams.get("t");
+  if (token && code) return verifyWebhookToken(code, token);
+
+  // Segredo global: so por header ou corpo, para nao acabar em log de acesso.
+  const provided = req.headers.get("x-webhook-secret") || String(body.secret ?? "");
   if (!provided) return false;
-  const a = Buffer.from(crypto.createHash("sha256").update(provided).digest());
-  const b = Buffer.from(crypto.createHash("sha256").update(expected).digest());
+  const a = crypto.createHash("sha256").update(provided).digest();
+  const b = crypto.createHash("sha256").update(expected).digest();
   return crypto.timingSafeEqual(a, b);
 }
 
@@ -41,13 +46,14 @@ export async function POST(req: Request) {
     if (!process.env.WEBHOOK_SECRET) {
       return fail("WEBHOOK_SECRET nao configurado no servidor.", 503);
     }
-    if (!authorized(req, body)) return fail("Nao autorizado.", 401);
-
     // A InfinitePay envia `order_nsu`; outros gateways usam `code`/`orderId`.
+    // Precisa vir antes da autorizacao: o token da URL e derivado deste codigo.
     const code = String(
       body.order_nsu ?? body.code ?? body.orderId ?? body.order_id ?? body.reference ?? ""
     ).trim();
     if (!code) return fail("Informe o codigo do pedido em 'order_nsu' ou 'code'.");
+
+    if (!authorized(req, body, code)) return fail("Nao autorizado.", 401);
 
     // A InfinitePay so chama o webhook quando o pagamento e aprovado e nao
     // envia campo de status, por isso o padrao e "paid".

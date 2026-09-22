@@ -1,40 +1,33 @@
 import { NextResponse } from "next/server";
-import { ADMIN_COOKIE, checkPassword, cookieOptions, createToken } from "@/lib/auth";
+import { ADMIN_COOKIE, adminPassword, checkPassword, cookieOptions, createToken } from "@/lib/auth";
 import { fail, readJson } from "@/lib/api";
+import { limitarOu429 } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Bloqueio simples por IP contra tentativa de forca bruta. */
-const attempts = new Map<string, { count: number; until: number }>();
-
-function clientKey(req: Request) {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    req.headers.get("x-real-ip") ||
-    "local"
-  );
-}
-
 export async function POST(req: Request) {
-  const key = clientKey(req);
-  const entry = attempts.get(key);
-  if (entry && entry.until > Date.now() && entry.count >= 6) {
-    return fail("Muitas tentativas. Aguarde alguns minutos.", 429);
+  // O painel tem uma senha so: sem teto de tentativas, forca bruta e questao
+  // de tempo. O contador fica no banco porque em serverless cada tentativa
+  // pode cair em uma instancia diferente.
+  const bloqueado = await limitarOu429(req, "login", 8, 15 * 60);
+  if (bloqueado) return bloqueado;
+
+  if (!adminPassword()) {
+    return fail("ADMIN_PASSWORD nao configurada no servidor. O painel esta fechado.", 503);
   }
 
   const body = await readJson(req);
   const password = String(body.password ?? "");
+  if (!password || !checkPassword(password)) return fail("Senha incorreta.", 401);
 
-  if (!password || !checkPassword(password)) {
-    const next = entry && entry.until > Date.now() ? entry.count + 1 : 1;
-    attempts.set(key, { count: next, until: Date.now() + 5 * 60_000 });
-    return fail("Senha incorreta.", 401);
+  const token = createToken();
+  if (!token) {
+    return fail("ADMIN_SESSION_SECRET nao configurada no servidor.", 503);
   }
 
-  attempts.delete(key);
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(ADMIN_COOKIE, createToken(), cookieOptions);
+  res.cookies.set(ADMIN_COOKIE, token, cookieOptions);
   return res;
 }
 
