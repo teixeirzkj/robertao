@@ -181,13 +181,13 @@ CREATE INDEX IF NOT EXISTS rate_limits_reset_idx ON rate_limits (reset_at);
 -- Fecha a API de dados do Supabase (PostgREST).
 --
 -- O Supabase publica em https://<projeto>.supabase.co/rest/v1/ toda tabela do
--- schema public, e por padrao os papeis `anon` e `authenticated` recebem
--- permissao total nelas. A chave `anon` e publica por design — ela nasce para
+-- schema public, e por padrao os papeis "anon" e "authenticated" recebem
+-- permissao total nelas. A chave "anon" e publica por design — ela nasce para
 -- ficar no JavaScript do navegador —, entao sem isto bastaria ter essa chave
 -- para ler o CPF de todo mundo, ou apagar as cotas vendidas.
 --
--- O site nao usa essa API: ele fala com o Postgres pelo driver `pg`, como o
--- papel `postgres`, que ignora RLS e mantem suas proprias permissoes. Ou seja,
+-- O site nao usa essa API: ele fala com o Postgres pelo driver "pg", como o
+-- papel "postgres", que ignora RLS e mantem suas proprias permissoes. Ou seja,
 -- revogar aqui nao tira nada do site.
 --
 -- O bloco so roda onde os papeis existem, para nao quebrar o Postgres local.
