@@ -155,7 +155,9 @@ INSERT INTO raffle (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 -- Colunas acrescentadas depois da primeira versao (idempotente).
 ALTER TABLE prizes ADD COLUMN IF NOT EXISTS image TEXT NOT NULL DEFAULT '';
 ALTER TABLE raffle ADD COLUMN IF NOT EXISTS reservation_minutes INTEGER NOT NULL DEFAULT 60;
--- InfiniteTag da InfinitePay (sem o $), usada para gerar o link de pagamento.
+-- Sobra da InfinitePay. O pagamento hoje e Pix pela SyncPay, cujas credenciais
+-- ficam em variavel de ambiente; a coluna permanece so para nao quebrar bancos
+-- existentes.
 ALTER TABLE raffle ADD COLUMN IF NOT EXISTS infinitepay_handle TEXT NOT NULL DEFAULT '';
 -- Convite do grupo de WhatsApp (https://chat.whatsapp.com/...).
 ALTER TABLE raffle ADD COLUMN IF NOT EXISTS whatsapp_group TEXT NOT NULL DEFAULT '';
@@ -163,6 +165,18 @@ ALTER TABLE raffle ADD COLUMN IF NOT EXISTS whatsapp_group TEXT NOT NULL DEFAULT
 ALTER TABLE raffle ADD COLUMN IF NOT EXISTS show_progress BOOLEAN NOT NULL DEFAULT TRUE;
 -- Segura as cotas premiadas ate a rifa arrecadar este valor (0 = sem trava).
 ALTER TABLE raffle ADD COLUMN IF NOT EXISTS prize_min_revenue_cents INTEGER NOT NULL DEFAULT 0;
+
+-- Cobranca Pix da SyncPay ligada ao pedido.
+--
+-- O "identifier" e o UUID que a SyncPay devolve ao criar a cobranca; e por ele
+-- que o webhook e a consulta encontram o pedido. O codigo copia-e-cola fica
+-- guardado para a pagina nao criar uma cobranca nova a cada recarga.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_id TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS pix_code TEXT;
+-- Ultima vez que perguntamos o status a SyncPay, para nao consultar a cada
+-- batida do relogio da pagina do pedido.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_checked_at TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS orders_payment_id_idx ON orders (payment_id);
 
 -- Consultas de maior/menor cota por periodo.
 CREATE INDEX IF NOT EXISTS tickets_created_idx ON tickets (created_at);

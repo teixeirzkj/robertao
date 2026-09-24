@@ -1,5 +1,6 @@
 import crypto from "crypto";
-import { confirmPayment, getOrder } from "@/lib/raffle";
+import { getOrder, getOrderByPaymentId, verificarPagamento } from "@/lib/raffle";
+import { after } from "next/server";
 import { fail, handleError, ok, readJson } from "@/lib/api";
 import { verifyWebhookToken } from "@/lib/auth";
 
@@ -8,36 +9,67 @@ export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
 
 /**
- * Confirmação de pagamento vinda de fora (InfinitePay via n8n, por exemplo).
+ * Aviso de mudanca de pagamento, vindo da SyncPay (ou do n8n).
  *
- * Ao receber a confirmação, o pedido é marcado como pago e **só então** as
- * cotas são sorteadas e gravadas. É idempotente: reenviar o mesmo pedido não
- * gera cotas novas, então retentativas do n8n são seguras.
+ * O corpo desta chamada NAO confirma nada. A SyncPay nao documenta o formato
+ * do payload nem como assinar, entao tratamos o webhook apenas como um "olhe
+ * de novo": achamos o pedido e perguntamos o status para a propria SyncPay.
+ * Assim, uma chamada forjada nao libera cota — no maximo faz o servidor
+ * consultar uma transacao que nao foi paga.
  *
- * Autenticacao: a InfinitePay traz na URL um token proprio do pedido (`t`),
- * derivado do WEBHOOK_SECRET. Integracoes nossas (n8n) podem usar o segredo
- * direto, mas so pelo header `x-webhook-secret` ou pelo corpo.
- *
- *   POST /api/webhooks/pagamento
- *   { "code": "RBAB12CD", "status": "paid" }
+ * Idempotente: reenviar o mesmo aviso nao sorteia cotas de novo.
  */
-function authorized(req: Request, body: Record<string, unknown>, code: string) {
-  const expected = process.env.WEBHOOK_SECRET;
-  if (!expected) return false;
 
-  // Token proprio deste pedido, que e o que a InfinitePay recebe na URL.
-  const token = new URL(req.url).searchParams.get("t");
-  if (token && code) return verifyWebhookToken(code, token);
+/**
+ * Autoriza a chamada ANTES de qualquer ida ao banco.
+ *
+ * A URL registrada na SyncPay carrega o codigo do pedido (`c`) e um HMAC dele
+ * (`t`), entao da para conferir a assinatura sem consultar nada. Isso importa:
+ * se a busca viesse primeiro, as respostas diferentes para pedido existente e
+ * inexistente contariam a quem chutasse quais codigos existem.
+ *
+ * Integracoes nossas (n8n) usam o segredo global, mas so por header ou corpo
+ * — na query ele acabaria em log de acesso.
+ */
+function autorizar(req: Request, body: Record<string, unknown>): { ok: boolean; code: string } {
+  const esperado = process.env.WEBHOOK_SECRET;
+  if (!esperado) return { ok: false, code: "" };
 
-  // Segredo global: so por header ou corpo, para nao acabar em log de acesso.
-  const provided = req.headers.get("x-webhook-secret") || String(body.secret ?? "");
-  if (!provided) return false;
-  const a = crypto.createHash("sha256").update(provided).digest();
-  const b = crypto.createHash("sha256").update(expected).digest();
-  return crypto.timingSafeEqual(a, b);
+  const params = new URL(req.url).searchParams;
+  const code = (params.get("c") ?? "").trim();
+  const token = params.get("t") ?? "";
+  if (code && token) return { ok: verifyWebhookToken(code, token), code };
+
+  const enviado = req.headers.get("x-webhook-secret") || String(body.secret ?? "");
+  if (!enviado) return { ok: false, code: "" };
+  const a = crypto.createHash("sha256").update(enviado).digest();
+  const b = crypto.createHash("sha256").update(esperado).digest();
+  return { ok: crypto.timingSafeEqual(a, b), code: "" };
 }
 
-const PAID = new Set(["paid", "pago", "approved", "aprovado", "succeeded", "confirmed", "success"]);
+/** Acha o pedido pelo que o aviso trouxer: codigo nosso ou UUID da SyncPay. */
+async function acharPedido(body: Record<string, unknown>, codeDaUrl: string) {
+  if (codeDaUrl) {
+    const porCodigo = await getOrder(codeDaUrl);
+    if (porCodigo) return porCodigo;
+  }
+
+  const dados = (body.data ?? body) as Record<string, unknown>;
+  const identifier = String(
+    dados.id ?? dados.identifier ?? dados.reference_id ?? dados.transaction_id ?? body.identifier ?? ""
+  ).trim();
+  if (identifier) {
+    const porPagamento = await getOrderByPaymentId(identifier);
+    if (porPagamento) return porPagamento;
+  }
+
+  const code = String(
+    body.code ?? body.order_nsu ?? body.orderId ?? body.order_id ?? body.reference ?? ""
+  ).trim();
+  if (code) return await getOrder(code);
+
+  return null;
+}
 
 export async function POST(req: Request) {
   try {
@@ -46,47 +78,30 @@ export async function POST(req: Request) {
     if (!process.env.WEBHOOK_SECRET) {
       return fail("WEBHOOK_SECRET nao configurado no servidor.", 503);
     }
-    // A InfinitePay envia `order_nsu`; outros gateways usam `code`/`orderId`.
-    // Precisa vir antes da autorizacao: o token da URL e derivado deste codigo.
-    const code = String(
-      body.order_nsu ?? body.code ?? body.orderId ?? body.order_id ?? body.reference ?? ""
-    ).trim();
-    if (!code) return fail("Informe o codigo do pedido em 'order_nsu' ou 'code'.");
 
-    if (!authorized(req, body, code)) return fail("Nao autorizado.", 401);
+    const auth = autorizar(req, body);
+    if (!auth.ok) return fail("Nao autorizado.", 401);
 
-    // A InfinitePay so chama o webhook quando o pagamento e aprovado e nao
-    // envia campo de status, por isso o padrao e "paid".
-    const status = String(body.status ?? "paid").toLowerCase();
-    if (!PAID.has(status)) {
-      return ok({ ignored: true, reason: "status '" + status + "' nao indica pagamento" });
-    }
+    const pedido = await acharPedido(body, auth.code);
+    // Aqui so chega quem ja passou pela assinatura, entao dizer que o pedido
+    // nao existe nao entrega nada — e evita a SyncPay reenviar para sempre.
+    if (!pedido) return ok({ ignorado: true, motivo: "pedido nao encontrado" });
 
-    // Confere o valor pago, para ninguem liberar cotas pagando menos.
-    const pago = Number(body.paid_amount ?? body.amount ?? NaN);
-    if (Number.isFinite(pago)) {
-      const pedido = await getOrder(code);
-      if (!pedido) return fail("Pedido nao encontrado.", 404);
-      if (Math.round(pago) < pedido.totalCents) {
-        console.error(
-          "[webhook] valor pago abaixo do pedido",
-          pedido.code,
-          pago,
-          pedido.totalCents
-        );
-        return fail("Valor pago menor que o total do pedido.", 409);
+    // A SyncPay corta o webhook em 5 segundos, e conferir o pagamento significa
+    // uma ida ate ela mais o sorteio das cotas em transacao — pode nao caber.
+    // Entao respondemos ja e fazemos o trabalho depois da resposta: quem decide
+    // se foi pago continua sendo a SyncPay, respondendo a nossa consulta.
+    after(async () => {
+      try {
+        await verificarPagamento(pedido.id, { forcar: true });
+      } catch (err) {
+        // A pagina do pedido consulta sozinha de poucos em poucos segundos,
+        // entao uma falha aqui atrasa a confirmacao, nao a perde.
+        console.error("[webhook] confirmacao falhou para", pedido.code, err);
       }
-    }
-
-    const order = await confirmPayment(code);
-    return ok({
-      code: order.code,
-      status: order.status,
-      quantity: order.quantity,
-      numbers: order.numbers,
-      prizes: order.prizes,
-      receiptUrl: body.receipt_url ?? null,
     });
+
+    return ok({ recebido: true, code: pedido.code });
   } catch (err) {
     return handleError(err);
   }

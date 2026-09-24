@@ -76,12 +76,11 @@ await api("/api/admin/raffle", {
     showProgress: true,
     // Cotas premiadas so comecam a sair depois de R$ 200 arrecadados.
     prizeMinRevenueCents: 20000,
-    // O pagamento e todo pelo checkout da InfinitePay; nao ha Pix manual.
+    // O pagamento e Pix pela SyncPay, com o codigo mostrado na propria pagina.
     pixKey: "",
     pixName: "",
     whatsapp: "5574999238282",
     whatsappGroup: "https://chat.whatsapp.com/Hrjk03WhV358ANrNCkqh8o",
-    infinitepayHandle: "riquelme-pereira-wkg",
     instagram: "@robertaorifas",
     grandPrize: "R$ 2.000 no Pix",
   }),

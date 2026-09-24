@@ -77,7 +77,7 @@ export function checkPassword(input: string): boolean {
 /**
  * Token de webhook valido para um unico pedido.
  *
- * A InfinitePay nao envia headers nossos, entao o que autentica a chamada tem
+ * A SyncPay nao envia headers nossos, entao o que autentica a chamada tem
  * que viajar na URL — e URL aparece em log de acesso, no painel do gateway e
  * no historico de quem abrir o link. Mandando um HMAC do codigo do pedido em
  * vez do WEBHOOK_SECRET, um link vazado so serve para aquele pedido (que ja

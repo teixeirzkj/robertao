@@ -29,8 +29,8 @@ export async function POST(req: Request) {
       return fail("Informe seu nome completo.");
     }
 
-    // Precisa ser celular: o checkout da InfinitePay recusa fixo e recusa o
-    // numero com o 55 do pais no lugar do DDD.
+    // Precisa ser celular: a SyncPay exige e recusa o numero com o 55 do
+    // pais no lugar do DDD.
     const phoneDigits = normalizePhone(String(body.phone ?? ""));
     if (!isValidPhone(phoneDigits)) {
       return fail("Informe um celular valido com DDD, ex.: (74) 99923-8282.");

@@ -24,7 +24,7 @@ export interface Raffle {
   prizeMinRevenueCents: number;
   pixKey: string;
   pixName: string;
-  /** InfiniteTag da InfinitePay (sem o $) usada no link de pagamento. */
+  /** @deprecated Sobra da InfinitePay; o pagamento hoje e Pix pela SyncPay. */
   infinitepayHandle: string;
   whatsapp: string;
   /** Convite do grupo de WhatsApp. */
@@ -90,6 +90,12 @@ export interface Order {
   status: OrderStatus;
   createdAt: string;
   paidAt: string | null;
+  /** UUID da cobranca na SyncPay, quando ja foi criada. */
+  paymentId: string | null;
+  /** Codigo Pix copia-e-cola da cobranca. */
+  pixCode: string | null;
+  /** Ultima consulta de status feita a SyncPay. */
+  paymentCheckedAt: string | null;
 }
 
 export interface OrderWithNumbers extends Order {
@@ -125,6 +131,8 @@ export interface PublicOrder {
   numbers: number[];
   prizes: WonPrize[];
   expiresAt: string | null;
+  /** Codigo Pix para pagar, quando o pedido ainda esta pendente. */
+  pixCode: string | null;
 }
 
 /** Resultado da consulta de maior/menor cota em um período. */

@@ -22,7 +22,6 @@ const TEXT_FIELDS = [
   "drawDate",
   "pixKey",
   "pixName",
-  "infinitepayHandle",
   "whatsapp",
   "whatsappGroup",
   "instagram",

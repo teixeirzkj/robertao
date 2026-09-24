@@ -9,9 +9,11 @@ import {
   ArrowLeft,
   Check,
   Clock,
+  Copy,
   CreditCard,
   Gift,
   Loader2,
+  QrCode,
   Sparkles,
   Ticket,
   TimerOff,
@@ -39,13 +41,11 @@ export default function OrderStatus({
     if (initial.status === "pago") return "revelado";
     return "aguardando";
   });
-  const [gerandoLink, setGerandoLink] = useState(false);
-  // Voltando da InfinitePay o redirect traz estes parametros na URL.
-  const [voltandoDoPagamento] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      /[?&](order_nsu|transaction_nsu|slug)=/.test(window.location.search)
+  const [pix, setPix] = useState<{ code: string; qr: string | null } | null>(
+    initial.pixCode ? { code: initial.pixCode, qr: null } : null
   );
+  const [gerandoPix, setGerandoPix] = useState(false);
+  const [copiado, setCopiado] = useState(false);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const seenPaid = useRef(initial.status === "pago");
@@ -55,7 +55,9 @@ export default function OrderStatus({
     async (manual = false) => {
       if (manual) setChecking(true);
       try {
-        const res = await fetch(`/api/orders/${order.code}`, { cache: "no-store" });
+        const res = await fetch(`/api/orders/${order.code}${manual ? "?forcar=1" : ""}`, {
+          cache: "no-store",
+        });
         if (!res.ok) return;
         const data: PublicOrder = await res.json();
         setOrder(data);
@@ -83,27 +85,47 @@ export default function OrderStatus({
 
   useEffect(() => {
     if (phase !== "aguardando") return;
-    const id = setInterval(() => refresh(), voltandoDoPagamento ? 2000 : POLL_MS);
+    const id = setInterval(() => refresh(), POLL_MS);
     return () => clearInterval(id);
-  }, [phase, refresh, voltandoDoPagamento]);
+  }, [phase, refresh]);
 
-  /** Cria o link na InfinitePay e manda o comprador para o checkout. */
-  async function pagarOnline() {
-    setGerandoLink(true);
+  /**
+   * Pede o código Pix ao servidor.
+   *
+   * A rota reaproveita a cobrança já criada, então chamar de novo (ao recarregar
+   * a página) devolve o mesmo código — o comprador nunca fica com dois Pix
+   * abertos sem saber qual pagar.
+   */
+  const gerarPix = useCallback(async () => {
+    setGerandoPix(true);
     setError(null);
     try {
       const res = await fetch(`/api/orders/${order.code}/pagamento`, { method: "POST" });
       const data = await res.json();
-      if (!res.ok || !data.url) {
-        setError(data?.error ?? "Nao foi possivel abrir o pagamento.");
-        setGerandoLink(false);
+      if (!res.ok || !data.pixCode) {
+        setError(data?.error ?? "Não foi possível gerar o Pix.");
         return;
       }
-      window.location.href = data.url;
+      setPix({ code: data.pixCode, qr: data.qr ?? null });
     } catch {
       setError("Falha de conexão. Tente novamente.");
-      setGerandoLink(false);
+    } finally {
+      setGerandoPix(false);
     }
+  }, [order.code]);
+
+  // O Pix aparece sozinho: cobrar um clique a mais só atrasa o pagamento.
+  useEffect(() => {
+    if (phase === "aguardando" && !pix?.qr && !gerandoPix) gerarPix();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
+
+  function copiarPix() {
+    if (!pix) return;
+    navigator.clipboard?.writeText(pix.code).then(() => {
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2500);
+    });
   }
 
   const whatsUrl = raffle.whatsapp
@@ -163,27 +185,66 @@ export default function OrderStatus({
                 elas ficam reservadas para você.
               </p>
 
-              {voltandoDoPagamento && (
-                <p className="mt-4 flex items-start gap-2 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-ink/75">
-                  <Loader2 className="mt-0.5 size-4 shrink-0 animate-spin text-gold" />
-                  Confirmando seu pagamento com a InfinitePay. Isso leva alguns segundos.
-                </p>
-              )}
+              {pix ? (
+                <div className="mt-4">
+                  {pix.qr && (
+                    <div className="mx-auto w-fit rounded-2xl bg-white p-3">
+                      <img
+                        src={pix.qr}
+                        alt="QR Code do Pix"
+                        width={200}
+                        height={200}
+                        className="size-[200px]"
+                      />
+                    </div>
+                  )}
 
-              <Button
-                size="lg"
-                fullWidth
-                className="mt-4"
-                loading={gerandoLink}
-                onClick={pagarOnline}
-              >
-                <CreditCard className="size-4" />
-                Pagar {formatBRL(order.totalCents)} agora
-              </Button>
-              <p className="mt-2 text-center text-[11px] text-ink/45">
-                Pix ou cartão pelo checkout da InfinitePay. Você volta para esta página com
-                suas cotas.
-              </p>
+                  <p className="mt-4 text-center text-xs text-ink/55">
+                    Abra o app do banco, escolha Pix e aponte para o QR Code — ou copie o
+                    código abaixo.
+                  </p>
+
+                  <button
+                    onClick={copiarPix}
+                    className="mt-3 flex w-full items-center justify-between gap-3 rounded-xl border border-ink/12 bg-paper-50 px-4 py-3.5 text-left transition-colors hover:border-gold/50 cursor-pointer"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[10px] uppercase tracking-[0.15em] text-ink/40">
+                        Pix copia e cola
+                      </span>
+                      <span className="mt-0.5 block truncate font-mono text-xs text-ink/80">
+                        {pix.code}
+                      </span>
+                    </span>
+                    {copiado ? (
+                      <span className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-gold">
+                        <Check className="size-4" /> copiado
+                      </span>
+                    ) : (
+                      <Copy className="size-4 shrink-0 text-ink/50" />
+                    )}
+                  </button>
+
+                  <p className="mt-3 text-center text-[11px] text-ink/45">
+                    Valor: <strong className="text-gold">{formatBRL(order.totalCents)}</strong> ·
+                    a confirmação é automática, não precisa enviar comprovante.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-4">
+                  {gerandoPix ? (
+                    <p className="flex items-center justify-center gap-2 py-8 text-sm text-ink/55">
+                      <Loader2 className="size-4 animate-spin text-gold" />
+                      Gerando seu Pix...
+                    </p>
+                  ) : (
+                    <Button size="lg" fullWidth loading={gerandoPix} onClick={gerarPix}>
+                      <QrCode className="size-4" />
+                      Gerar Pix de {formatBRL(order.totalCents)}
+                    </Button>
+                  )}
+                </div>
+              )}
 
               {order.expiresAt && (
                 <Countdown until={order.expiresAt} onExpirar={() => setPhase("expirado")} />

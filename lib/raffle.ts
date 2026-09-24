@@ -374,6 +374,11 @@ function mapOrder(row: Row): Order {
     status: row.status,
     createdAt: new Date(row.created_at).toISOString(),
     paidAt: row.paid_at ? new Date(row.paid_at).toISOString() : null,
+    paymentId: row.payment_id ?? null,
+    pixCode: row.pix_code ?? null,
+    paymentCheckedAt: row.payment_checked_at
+      ? new Date(row.payment_checked_at).toISOString()
+      : null,
   };
 }
 
@@ -522,7 +527,7 @@ async function drawNumbers(
  * Confirma o pagamento e **só então** sorteia e grava as cotas do pedido.
  *
  * É idempotente: chamar de novo em um pedido já pago devolve as mesmas cotas,
- * sem sortear nada novo — importante para webhooks (InfinitePay/n8n).
+ * sem sortear nada novo — importante para webhooks (SyncPay/n8n).
  */
 export async function confirmPayment(idOrCode: string): Promise<OrderWithNumbers> {
   const result = await transaction(async (client) => {
@@ -717,6 +722,8 @@ export function toPublicOrder(order: OrderWithNumbers, reservationMinutes: numbe
             new Date(order.createdAt).getTime() + reservationMinutes * 60_000
           ).toISOString()
         : null,
+    // So faz sentido mostrar o Pix enquanto ha o que pagar.
+    pixCode: order.status === "pendente" ? order.pixCode : null,
   };
 }
 
@@ -1001,4 +1008,75 @@ export async function getGrandWinner(): Promise<GrandDraw | null> {
   const { rows } = await query<Row>("SELECT * FROM orders WHERE id = $1", [raffle.winnerOrderId]);
   if (!rows.length) return null;
   return { number: raffle.winnerNumber, order: mapOrder(rows[0]) };
+}
+
+/* ------------------------------------------------------- pagamento (Pix) */
+
+/** Guarda no pedido a cobranca Pix criada na SyncPay. */
+export async function salvarCobranca(orderId: string, paymentId: string, pixCode: string) {
+  await query(
+    "UPDATE orders SET payment_id = $1, pix_code = $2, payment_checked_at = NULL WHERE id = $3",
+    [paymentId, pixCode, orderId]
+  );
+}
+
+/** Acha o pedido pelo UUID da transacao, que e o que o webhook traz. */
+export async function getOrderByPaymentId(paymentId: string): Promise<OrderWithNumbers | null> {
+  const { rows } = await query<Row>("SELECT * FROM orders WHERE payment_id = $1 LIMIT 1", [
+    paymentId,
+  ]);
+  if (!rows.length) return null;
+  return hydrateOrder(rows[0]);
+}
+
+/**
+ * Consulta a SyncPay e, se o Pix caiu, confirma o pedido.
+ *
+ * `forcar` pula o intervalo minimo entre consultas: e o que o botao "Ja
+ * paguei, verificar" usa. Sem ele, a pagina do pedido — que atualiza sozinha
+ * de poucos em poucos segundos — bateria na SyncPay o tempo todo.
+ *
+ * O valor pago e conferido contra o total: uma cobranca adulterada para menos
+ * nao libera cota.
+ */
+const INTERVALO_CONSULTA_MS = 15_000;
+
+export async function verificarPagamento(
+  idOrCode: string,
+  { forcar = false } = {}
+): Promise<OrderWithNumbers | null> {
+  const order = await getOrder(idOrCode);
+  if (!order) return null;
+  if (order.status !== "pendente" || !order.paymentId) return order;
+
+  if (!forcar && order.paymentCheckedAt) {
+    const desde = Date.now() - new Date(order.paymentCheckedAt).getTime();
+    if (desde < INTERVALO_CONSULTA_MS) return order;
+  }
+
+  await query("UPDATE orders SET payment_checked_at = now() WHERE id = $1", [order.id]);
+
+  const { consultarTransacao } = await import("@/lib/syncpay");
+  let situacao;
+  try {
+    situacao = await consultarTransacao(order.paymentId);
+  } catch (err) {
+    // Indisponibilidade da SyncPay nao pode derrubar a pagina do pedido.
+    console.error("[pagamento] consulta falhou para", order.code, err);
+    return order;
+  }
+
+  if (!situacao.pago) return order;
+
+  if (situacao.valorCentavos !== null && situacao.valorCentavos < order.totalCents) {
+    console.error(
+      "[pagamento] valor abaixo do pedido",
+      order.code,
+      situacao.valorCentavos,
+      order.totalCents
+    );
+    return order;
+  }
+
+  return confirmPayment(order.id);
 }
