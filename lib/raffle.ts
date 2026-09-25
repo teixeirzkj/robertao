@@ -1092,3 +1092,49 @@ export async function confirmarPagamentoPorAviso({
 
   return { ok: true, order: await confirmPayment(order.id) };
 }
+
+/**
+ * Rede de seguranca: pergunta ao gateway se o Pix caiu.
+ *
+ * O caminho normal e o aviso do gateway. Esta consulta cobre o caso em que
+ * ele se perde — sem ela, quem pagou ficaria esperando ate alguem confirmar
+ * na mao pelo painel.
+ *
+ * Espacada de proposito: a pagina do pedido atualiza de poucos em poucos
+ * segundos, e o gateway responde 429 a quem exagera. `forcar` pula o
+ * intervalo, para o botao "Ja paguei, verificar".
+ */
+const INTERVALO_CONSULTA_MS = 20_000;
+
+export async function verificarPagamento(
+  idOrCode: string,
+  { forcar = false } = {}
+): Promise<OrderWithNumbers | null> {
+  const order = await getOrder(idOrCode);
+  if (!order) return null;
+  if (order.status !== "pendente" || !order.pixCode) return order;
+
+  if (!forcar && order.paymentCheckedAt) {
+    const desde = Date.now() - new Date(order.paymentCheckedAt).getTime();
+    if (desde < INTERVALO_CONSULTA_MS) return order;
+  }
+  await query("UPDATE orders SET payment_checked_at = now() WHERE id = $1", [order.id]);
+
+  const { consultarPorPedido } = await import("@/lib/sigilopay");
+  let situacao;
+  try {
+    situacao = await consultarPorPedido(order.code);
+  } catch (err) {
+    // Gateway fora do ar nao pode derrubar a pagina do pedido.
+    console.error("[pagamento] consulta falhou para", order.code, err);
+    return order;
+  }
+  if (!situacao?.pago) return order;
+
+  if (situacao.valorCentavos !== null && situacao.valorCentavos < order.totalCents) {
+    console.error("[pagamento] valor abaixo do pedido", order.code);
+    return order;
+  }
+
+  return confirmPayment(order.id);
+}

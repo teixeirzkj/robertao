@@ -205,3 +205,36 @@ export function lerSituacao(corpo: any): SituacaoPagamento {
     valorCentavos: Number.isFinite(valor) ? Math.round(valor * 100) : null,
   };
 }
+
+/**
+ * Pergunta ao gateway como esta a cobranca de um pedido.
+ *
+ * A consulta e por `clientIdentifier` — o codigo do pedido que nos mesmos
+ * enviamos —, entao nao dependemos de ter guardado o id deles.
+ *
+ * Serve de rede: o aviso de pagamento e o caminho normal, mas se ele se
+ * perder o comprador ficaria esperando sem ninguem perceber. A documentacao
+ * pede para nao chamar a API de volta *por causa do aviso*; consulta pontual,
+ * espacada, e outra coisa — e o que evita deixar quem pagou no escuro.
+ */
+export async function consultarPorPedido(code: string): Promise<SituacaoPagamento | null> {
+  const { res, corpo } = await pedirJson(
+    `/api/v1/gateway/transactions?clientIdentifier=${encodeURIComponent(code)}`,
+    { method: "GET", headers: credenciais() }
+  );
+
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    throw new RaffleError(
+      res.status === 429
+        ? "O gateway pediu para esperar um pouco antes de consultar de novo."
+        : `Nao foi possivel consultar o pagamento (HTTP ${res.status}).`,
+      502
+    );
+  }
+
+  // A resposta pode vir como objeto unico ou dentro de uma lista.
+  const t = Array.isArray(corpo) ? corpo[0] : (corpo?.data ?? corpo);
+  if (!t) return null;
+  return lerSituacao(t);
+}

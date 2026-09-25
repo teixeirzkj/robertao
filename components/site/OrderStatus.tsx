@@ -55,7 +55,7 @@ export default function OrderStatus({
     async (manual = false) => {
       if (manual) setChecking(true);
       try {
-        const res = await fetch(`/api/orders/${order.code}`, {
+        const res = await fetch(`/api/orders/${order.code}${manual ? "?forcar=1" : ""}`, {
           cache: "no-store",
         });
         if (!res.ok) return;
