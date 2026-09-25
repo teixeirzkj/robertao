@@ -74,29 +74,6 @@ export function checkPassword(input: string): boolean {
   return crypto.timingSafeEqual(a, b);
 }
 
-/**
- * Token de webhook valido para um unico pedido.
- *
- * A SyncPay nao envia headers nossos, entao o que autentica a chamada tem
- * que viajar na URL — e URL aparece em log de acesso, no painel do gateway e
- * no historico de quem abrir o link. Mandando um HMAC do codigo do pedido em
- * vez do WEBHOOK_SECRET, um link vazado so serve para aquele pedido (que ja
- * confere o valor pago e e idempotente), nunca para confirmar outros.
- */
-export function webhookToken(code: string): string | null {
-  const s = process.env.WEBHOOK_SECRET;
-  if (!s) return null;
-  return crypto.createHmac("sha256", s).update(`pedido:${code}`).digest("base64url");
-}
-
-export function verifyWebhookToken(code: string, provided: string): boolean {
-  const expected = webhookToken(code);
-  if (!expected || !provided) return false;
-  const a = Buffer.from(provided);
-  const b = Buffer.from(expected);
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
-}
-
 export async function isAuthenticated() {
   const store = await cookies();
   return verifyToken(store.get(ADMIN_COOKIE)?.value);

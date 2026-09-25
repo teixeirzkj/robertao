@@ -24,7 +24,7 @@ export interface Raffle {
   prizeMinRevenueCents: number;
   pixKey: string;
   pixName: string;
-  /** @deprecated Sobra da InfinitePay; o pagamento hoje e Pix pela SyncPay. */
+  /** @deprecated Sobra da InfinitePay; o pagamento hoje e Pix pela SigiloPay. */
   infinitepayHandle: string;
   whatsapp: string;
   /** Convite do grupo de WhatsApp. */
@@ -90,11 +90,15 @@ export interface Order {
   status: OrderStatus;
   createdAt: string;
   paidAt: string | null;
-  /** UUID da cobranca na SyncPay, quando ja foi criada. */
+  /** Id da transacao no gateway, quando a cobranca ja foi criada. */
   paymentId: string | null;
   /** Codigo Pix copia-e-cola da cobranca. */
   pixCode: string | null;
-  /** Ultima consulta de status feita a SyncPay. */
+  /** Token que valida o aviso de pagamento deste pedido. */
+  paymentToken: string | null;
+  /** Quando o codigo Pix perde a validade. */
+  pixExpiresAt: string | null;
+  /** Ultima consulta de status feita ao gateway. */
   paymentCheckedAt: string | null;
 }
 

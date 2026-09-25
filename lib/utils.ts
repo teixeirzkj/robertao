@@ -62,7 +62,7 @@ export function normalizePhone(value: string) {
 /**
  * Celular valido: DDD (sem zero) + 9 + 8 digitos.
  *
- * A exigencia vem da SyncPay, que recusa qualquer outra coisa
+ * A exigencia vem do gateway, que recusa qualquer outra coisa
  * — inclusive telefone fixo de 10 digitos. Melhor barrar no formulario do que
  * deixar a pessoa descobrir so na hora de pagar.
  */

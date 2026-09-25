@@ -76,7 +76,7 @@ await api("/api/admin/raffle", {
     showProgress: true,
     // Cotas premiadas so comecam a sair depois de R$ 200 arrecadados.
     prizeMinRevenueCents: 20000,
-    // O pagamento e Pix pela SyncPay, com o codigo mostrado na propria pagina.
+    // O pagamento e Pix pela SigiloPay, com o codigo mostrado na propria pagina.
     pixKey: "",
     pixName: "",
     whatsapp: "5574999238282",

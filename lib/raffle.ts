@@ -376,6 +376,8 @@ function mapOrder(row: Row): Order {
     paidAt: row.paid_at ? new Date(row.paid_at).toISOString() : null,
     paymentId: row.payment_id ?? null,
     pixCode: row.pix_code ?? null,
+    paymentToken: row.payment_token ?? null,
+    pixExpiresAt: row.pix_expires_at ? new Date(row.pix_expires_at).toISOString() : null,
     paymentCheckedAt: row.payment_checked_at
       ? new Date(row.payment_checked_at).toISOString()
       : null,
@@ -527,7 +529,7 @@ async function drawNumbers(
  * Confirma o pagamento e **só então** sorteia e grava as cotas do pedido.
  *
  * É idempotente: chamar de novo em um pedido já pago devolve as mesmas cotas,
- * sem sortear nada novo — importante para webhooks (SyncPay/n8n).
+ * sem sortear nada novo — importante para o aviso do gateway.
  */
 export async function confirmPayment(idOrCode: string): Promise<OrderWithNumbers> {
   const result = await transaction(async (client) => {
@@ -1012,15 +1014,31 @@ export async function getGrandWinner(): Promise<GrandDraw | null> {
 
 /* ------------------------------------------------------- pagamento (Pix) */
 
-/** Guarda no pedido a cobranca Pix criada na SyncPay. */
-export async function salvarCobranca(orderId: string, paymentId: string, pixCode: string) {
+/** Guarda no pedido a cobranca Pix criada no gateway. */
+export async function salvarCobranca(
+  orderId: string,
+  dados: { paymentId: string; pixCode: string; token: string | null; expiresAt: string | null }
+) {
   await query(
-    "UPDATE orders SET payment_id = $1, pix_code = $2, payment_checked_at = NULL WHERE id = $3",
-    [paymentId, pixCode, orderId]
+    `UPDATE orders
+        SET payment_id = $1, pix_code = $2, payment_token = $3,
+            pix_expires_at = $4, payment_checked_at = NULL
+      WHERE id = $5`,
+    [dados.paymentId, dados.pixCode, dados.token, dados.expiresAt, orderId]
   );
 }
 
-/** Acha o pedido pelo UUID da transacao, que e o que o webhook traz. */
+/** Descarta a cobranca para que uma nova seja gerada. */
+export async function limparCobranca(orderId: string) {
+  await query(
+    `UPDATE orders
+        SET payment_id = NULL, pix_code = NULL, payment_token = NULL, pix_expires_at = NULL
+      WHERE id = $1`,
+    [orderId]
+  );
+}
+
+/** Acha o pedido pelo id da transacao no gateway. */
 export async function getOrderByPaymentId(paymentId: string): Promise<OrderWithNumbers | null> {
   const { rows } = await query<Row>("SELECT * FROM orders WHERE payment_id = $1 LIMIT 1", [
     paymentId,
@@ -1030,53 +1048,47 @@ export async function getOrderByPaymentId(paymentId: string): Promise<OrderWithN
 }
 
 /**
- * Consulta a SyncPay e, se o Pix caiu, confirma o pedido.
+ * Confirma o pagamento a partir do aviso do gateway.
  *
- * `forcar` pula o intervalo minimo entre consultas: e o que o botao "Ja
- * paguei, verificar" usa. Sem ele, a pagina do pedido — que atualiza sozinha
- * de poucos em poucos segundos — bateria na SyncPay o tempo todo.
+ * Na SigiloPay o webhook e a confirmacao — a documentacao deles pede
+ * explicitamente para nao chamar de volta para conferir o evento. Entao quem
+ * sustenta a seguranca aqui e o token: cada cobranca nasce com o seu, e o
+ * aviso so vale se trouxer exatamente aquele. Um aviso forjado precisaria do
+ * token daquele pedido, que so existe entre nos e o gateway.
  *
- * O valor pago e conferido contra o total: uma cobranca adulterada para menos
- * nao libera cota.
+ * O valor tambem e conferido contra o total: pagar menos nao libera cota.
+ *
+ * Idempotente: reenviar o mesmo aviso nao sorteia cotas de novo, porque
+ * `confirmPayment` ja trata pedido pago.
  */
-const INTERVALO_CONSULTA_MS = 15_000;
+export async function confirmarPagamentoPorAviso({
+  code,
+  token,
+  valorCentavos,
+}: {
+  code: string;
+  token: string;
+  valorCentavos: number | null;
+}): Promise<{ ok: boolean; motivo?: string; order?: OrderWithNumbers }> {
+  const order = await getOrder(code);
+  if (!order) return { ok: false, motivo: "pedido nao encontrado" };
 
-export async function verificarPagamento(
-  idOrCode: string,
-  { forcar = false } = {}
-): Promise<OrderWithNumbers | null> {
-  const order = await getOrder(idOrCode);
-  if (!order) return null;
-  if (order.status !== "pendente" || !order.paymentId) return order;
+  const esperado = order.paymentToken ?? process.env.SIGILOPAY_WEBHOOK_TOKEN ?? "";
+  if (!esperado) return { ok: false, motivo: "pedido sem token de validacao" };
 
-  if (!forcar && order.paymentCheckedAt) {
-    const desde = Date.now() - new Date(order.paymentCheckedAt).getTime();
-    if (desde < INTERVALO_CONSULTA_MS) return order;
+  const a = Buffer.from(token);
+  const b = Buffer.from(esperado);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return { ok: false, motivo: "token invalido" };
   }
 
-  await query("UPDATE orders SET payment_checked_at = now() WHERE id = $1", [order.id]);
+  if (order.status === "pago") return { ok: true, order };
+  if (order.status === "cancelado") return { ok: false, motivo: "pedido cancelado" };
 
-  const { consultarTransacao } = await import("@/lib/syncpay");
-  let situacao;
-  try {
-    situacao = await consultarTransacao(order.paymentId);
-  } catch (err) {
-    // Indisponibilidade da SyncPay nao pode derrubar a pagina do pedido.
-    console.error("[pagamento] consulta falhou para", order.code, err);
-    return order;
+  if (valorCentavos !== null && valorCentavos < order.totalCents) {
+    console.error("[pagamento] valor abaixo do pedido", order.code, valorCentavos, order.totalCents);
+    return { ok: false, motivo: "valor menor que o total do pedido" };
   }
 
-  if (!situacao.pago) return order;
-
-  if (situacao.valorCentavos !== null && situacao.valorCentavos < order.totalCents) {
-    console.error(
-      "[pagamento] valor abaixo do pedido",
-      order.code,
-      situacao.valorCentavos,
-      order.totalCents
-    );
-    return order;
-  }
-
-  return confirmPayment(order.id);
+  return { ok: true, order: await confirmPayment(order.id) };
 }
