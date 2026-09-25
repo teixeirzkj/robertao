@@ -166,14 +166,20 @@ ALTER TABLE raffle ADD COLUMN IF NOT EXISTS show_progress BOOLEAN NOT NULL DEFAU
 -- Segura as cotas premiadas ate a rifa arrecadar este valor (0 = sem trava).
 ALTER TABLE raffle ADD COLUMN IF NOT EXISTS prize_min_revenue_cents INTEGER NOT NULL DEFAULT 0;
 
--- Cobranca Pix da SyncPay ligada ao pedido.
+-- Cobranca Pix ligada ao pedido.
 --
--- O "identifier" e o UUID que a SyncPay devolve ao criar a cobranca; e por ele
--- que o webhook e a consulta encontram o pedido. O codigo copia-e-cola fica
--- guardado para a pagina nao criar uma cobranca nova a cada recarga.
+-- "payment_id" e o id que o gateway cria para a transacao; guardamos para
+-- consultar depois. O copia-e-cola fica salvo para a pagina nao gerar uma
+-- cobranca nova a cada recarga, o que deixaria o comprador com dois codigos
+-- sem saber qual pagar.
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_id TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS pix_code TEXT;
--- Ultima vez que perguntamos o status a SyncPay, para nao consultar a cada
+-- Token que o gateway devolve ao criar a cobranca, usado para validar o aviso
+-- de pagamento. E por transacao: um token vazado so vale para aquele pedido.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_token TEXT;
+-- Quando o codigo Pix perde a validade e precisa ser gerado de novo.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS pix_expires_at TIMESTAMPTZ;
+-- Ultima vez que perguntamos o status ao gateway, para nao consultar a cada
 -- batida do relogio da pagina do pedido.
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_checked_at TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS orders_payment_id_idx ON orders (payment_id);
