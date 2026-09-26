@@ -155,7 +155,7 @@ INSERT INTO raffle (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 -- Colunas acrescentadas depois da primeira versao (idempotente).
 ALTER TABLE prizes ADD COLUMN IF NOT EXISTS image TEXT NOT NULL DEFAULT '';
 ALTER TABLE raffle ADD COLUMN IF NOT EXISTS reservation_minutes INTEGER NOT NULL DEFAULT 60;
--- Sobra da InfinitePay. O pagamento hoje e Pix pela SigiloPay, cujas credenciais
+-- Sobra da InfinitePay. O pagamento hoje e Pix pelo Mercado Pago, cujas credenciais
 -- ficam em variavel de ambiente; a coluna permanece so para nao quebrar bancos
 -- existentes.
 ALTER TABLE raffle ADD COLUMN IF NOT EXISTS infinitepay_handle TEXT NOT NULL DEFAULT '';

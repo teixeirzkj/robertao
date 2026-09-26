@@ -1,5 +1,5 @@
 import { getOrder, getRaffle, limparCobranca, salvarCobranca } from "@/lib/raffle";
-import { criarCobrancaPix } from "@/lib/sigilopay";
+import { criarCobrancaPix } from "@/lib/mercadopago";
 import { fail, handleError, ok } from "@/lib/api";
 import { limitarOu429 } from "@/lib/rate-limit";
 
@@ -75,16 +75,16 @@ export async function POST(req: Request, { params }: Ctx) {
     if (order.pixCode) await limparCobranca(order.id);
 
     const raffle = await getRaffle();
+    // A URL do aviso e configurada no painel do gateway, nao por cobranca.
     const cobranca = await criarCobrancaPix({
       order,
-      callbackUrl: new URL("/api/webhooks/pagamento", baseUrl(req)).toString(),
       descricao: `${order.quantity} cota(s) — ${raffle.title}`,
     });
 
     await salvarCobranca(order.id, {
-      paymentId: cobranca.transactionId,
+      paymentId: cobranca.orderId,
       pixCode: cobranca.pixCode,
-      token: cobranca.webhookToken,
+      token: null,
       expiresAt: cobranca.expiresAt,
     });
 

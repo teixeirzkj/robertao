@@ -1,4 +1,6 @@
-import { confirmarPagamentoPorAviso } from "@/lib/raffle";
+import { after } from "next/server";
+import { getOrderByPaymentId, verificarPagamento } from "@/lib/raffle";
+import { assinaturaValida } from "@/lib/mercadopago";
 import { fail, handleError, ok, readJson } from "@/lib/api";
 
 export const runtime = "nodejs";
@@ -7,61 +9,50 @@ export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
 
 /**
- * Aviso de pagamento do gateway (SigiloPay).
+ * Aviso de pagamento do Mercado Pago.
  *
- *   { event: "TRANSACTION_PAID", token, transaction: { identifier, status, amount } }
+ *   { type: "payment" | "order", action, data: { id } }
+ *   header x-signature: ts=<numero>,v1=<hmac>
  *
- * Aqui o aviso E a confirmacao: a documentacao do gateway pede para nao
- * chamar de volta so para conferir o evento. Quem sustenta a seguranca e o
- * `token`, que nasce junto com a cobranca e vale so para aquele pedido —
- * guardamos o nosso e comparamos em tempo constante.
- *
- * O `transaction.identifier` e o codigo do pedido que nos mesmos enviamos ao
- * criar a cobranca, entao nao ha mapeamento a manter.
+ * O aviso traz so um id — de proposito. Conferimos a assinatura e depois
+ * perguntamos a situacao para a API: quem diz se foi pago e o gateway,
+ * respondendo a nos, nunca o corpo de uma requisicao que chegou de fora.
  *
  * Idempotente: reenviar o mesmo aviso nao sorteia cotas de novo.
  */
-const EVENTO_PAGO = "TRANSACTION_PAID";
-const STATUS_PAGO = "COMPLETED";
-
 export async function POST(req: Request) {
   try {
     const body = await readJson(req);
 
-    const evento = String(body.event ?? "").toUpperCase();
-    if (evento !== EVENTO_PAGO) {
-      // Outros eventos nao mexem em cota; responder 200 evita reenvio eterno.
-      return ok({ ignorado: true, motivo: `evento "${evento || "vazio"}" nao tratado` });
+    const dados = (body.data ?? {}) as Record<string, unknown>;
+    const dataId = String(dados.id ?? body.id ?? "").trim();
+
+    // A assinatura vem antes de qualquer ida ao banco: assim a rota nao conta
+    // a quem chutar quais pedidos existem.
+    if (!assinaturaValida(req, dataId)) return fail("Nao autorizado.", 401);
+    if (!dataId) return ok({ ignorado: true, motivo: "aviso sem id" });
+
+    const tipo = String(body.type ?? "").toLowerCase();
+    if (tipo && !["payment", "order"].includes(tipo)) {
+      return ok({ ignorado: true, motivo: `tipo "${tipo}" nao tratado` });
     }
 
-    const transacao = (body.transaction ?? {}) as Record<string, unknown>;
-    const code = String(transacao.identifier ?? "").trim();
-    const token = String(body.token ?? "");
-    if (!code || !token) return fail("Nao autorizado.", 401);
+    const pedido = await getOrderByPaymentId(dataId);
+    if (!pedido) return ok({ ignorado: true, motivo: "pedido nao encontrado" });
 
-    const status = String(transacao.status ?? "").toUpperCase();
-    if (status && status !== STATUS_PAGO) {
-      return ok({ ignorado: true, motivo: `status "${status}" nao indica pagamento` });
-    }
-
-    // O valor vem em reais, na moeda de recebimento do produtor.
-    const valor = Number(transacao.amount);
-    const valorCentavos = Number.isFinite(valor) ? Math.round(valor * 100) : null;
-
-    const r = await confirmarPagamentoPorAviso({ code, token, valorCentavos });
-
-    if (!r.ok) {
-      // Token errado e a unica recusa que merece 401; o resto o gateway nao
-      // resolve reenviando. Nao registramos o token nem o codigo em log.
-      if (r.motivo === "token invalido") {
-        console.error("[webhook] token invalido");
-        return fail("Nao autorizado.", 401);
+    // O gateway espera resposta rapida; a confirmacao envolve consulta mais
+    // sorteio em transacao, entao respondemos ja e fazemos o trabalho depois.
+    after(async () => {
+      try {
+        await verificarPagamento(pedido.id, { forcar: true });
+      } catch (err) {
+        // A pagina do pedido consulta sozinha, entao uma falha aqui atrasa a
+        // confirmacao em vez de perde-la.
+        console.error("[webhook] confirmacao falhou para", pedido.code, err);
       }
-      console.error("[webhook] aviso recusado:", r.motivo);
-      return ok({ ignorado: true, motivo: r.motivo });
-    }
+    });
 
-    return ok({ code: r.order?.code, status: r.order?.status });
+    return ok({ recebido: true });
   } catch (err) {
     return handleError(err);
   }

@@ -1048,52 +1048,6 @@ export async function getOrderByPaymentId(paymentId: string): Promise<OrderWithN
 }
 
 /**
- * Confirma o pagamento a partir do aviso do gateway.
- *
- * Na SigiloPay o webhook e a confirmacao — a documentacao deles pede
- * explicitamente para nao chamar de volta para conferir o evento. Entao quem
- * sustenta a seguranca aqui e o token: cada cobranca nasce com o seu, e o
- * aviso so vale se trouxer exatamente aquele. Um aviso forjado precisaria do
- * token daquele pedido, que so existe entre nos e o gateway.
- *
- * O valor tambem e conferido contra o total: pagar menos nao libera cota.
- *
- * Idempotente: reenviar o mesmo aviso nao sorteia cotas de novo, porque
- * `confirmPayment` ja trata pedido pago.
- */
-export async function confirmarPagamentoPorAviso({
-  code,
-  token,
-  valorCentavos,
-}: {
-  code: string;
-  token: string;
-  valorCentavos: number | null;
-}): Promise<{ ok: boolean; motivo?: string; order?: OrderWithNumbers }> {
-  const order = await getOrder(code);
-  if (!order) return { ok: false, motivo: "pedido nao encontrado" };
-
-  const esperado = order.paymentToken ?? process.env.SIGILOPAY_WEBHOOK_TOKEN ?? "";
-  if (!esperado) return { ok: false, motivo: "pedido sem token de validacao" };
-
-  const a = Buffer.from(token);
-  const b = Buffer.from(esperado);
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
-    return { ok: false, motivo: "token invalido" };
-  }
-
-  if (order.status === "pago") return { ok: true, order };
-  if (order.status === "cancelado") return { ok: false, motivo: "pedido cancelado" };
-
-  if (valorCentavos !== null && valorCentavos < order.totalCents) {
-    console.error("[pagamento] valor abaixo do pedido", order.code, valorCentavos, order.totalCents);
-    return { ok: false, motivo: "valor menor que o total do pedido" };
-  }
-
-  return { ok: true, order: await confirmPayment(order.id) };
-}
-
-/**
  * Rede de seguranca: pergunta ao gateway se o Pix caiu.
  *
  * O caminho normal e o aviso do gateway. Esta consulta cobre o caso em que
@@ -1112,7 +1066,7 @@ export async function verificarPagamento(
 ): Promise<OrderWithNumbers | null> {
   const order = await getOrder(idOrCode);
   if (!order) return null;
-  if (order.status !== "pendente" || !order.pixCode) return order;
+  if (order.status !== "pendente" || !order.paymentId) return order;
 
   if (!forcar && order.paymentCheckedAt) {
     const desde = Date.now() - new Date(order.paymentCheckedAt).getTime();
@@ -1120,10 +1074,10 @@ export async function verificarPagamento(
   }
   await query("UPDATE orders SET payment_checked_at = now() WHERE id = $1", [order.id]);
 
-  const { consultarPorPedido } = await import("@/lib/sigilopay");
+  const { consultarOrder } = await import("@/lib/mercadopago");
   let situacao;
   try {
-    situacao = await consultarPorPedido(order.code);
+    situacao = await consultarOrder(order.paymentId);
   } catch (err) {
     // Gateway fora do ar nao pode derrubar a pagina do pedido.
     console.error("[pagamento] consulta falhou para", order.code, err);

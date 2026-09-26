@@ -24,7 +24,7 @@ export interface Raffle {
   prizeMinRevenueCents: number;
   pixKey: string;
   pixName: string;
-  /** @deprecated Sobra da InfinitePay; o pagamento hoje e Pix pela SigiloPay. */
+  /** @deprecated Sobra da InfinitePay; o pagamento hoje e Pix pelo Mercado Pago. */
   infinitepayHandle: string;
   whatsapp: string;
   /** Convite do grupo de WhatsApp. */
